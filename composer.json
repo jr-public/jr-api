@@ -1,0 +1,20 @@
+{
+    "name": "jotaerre/jr-api",
+    "description": "Template API",
+	"version": "0.1.0",
+    "require": {
+        "firebase/php-jwt": "^6.0",
+        "php": ">=8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jotaerre\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    }
+}
