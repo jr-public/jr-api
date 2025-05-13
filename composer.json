@@ -4,6 +4,9 @@
 	"version": "0.1.0",
     "require": {
         "firebase/php-jwt": "^6.0",
+        "doctrine/orm": "^3",
+        "doctrine/dbal": "^4",
+        "symfony/cache": "^7",
         "php": ">=8.2"
     },
     "require-dev": {
@@ -11,10 +14,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Jotaerre\\": "src/"
+            "": "src/Entity/"
         },
         "files": [
             "src/functions.php"
         ]
     }
 }
+
+
