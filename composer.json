@@ -15,8 +15,9 @@
     },
     "autoload": {
         "psr-4": {
+            "App\\DTO\\": "src/DTO/",
             "App\\Entity\\": "src/Entity/",
-            "App\\DTO\\": "src/DTO/"
+            "App\\Service\\": "src/Service/"
         },
         "files": [
             "src/functions.php"

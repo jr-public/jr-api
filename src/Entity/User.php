@@ -1,6 +1,5 @@
 <?php
 namespace App\Entity;
-use App\DTO\UserRegistrationDTO;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -12,7 +11,7 @@ class User {
     private int|null $id = null;
 
     #[ORM\Column(type: 'string')]
-    private string $name;
+    private string $username;
 
     #[ORM\ManyToOne(targetEntity: Client::class)]
     #[ORM\JoinColumn(nullable:false)]
@@ -26,7 +25,11 @@ class User {
 
     #[ORM\Column(type: 'string')]
     private string $password;
-
+    
+    public function __construct() {
+        $this->created = new \DateTimeImmutable();
+    }
+    
     public function get( string $prop ) {
         return $this->$prop ?? null;
     }
@@ -35,8 +38,8 @@ class User {
         $this->client = $client;
         return $this;
     }
-    public function setName( string $name ): self {
-        $this->name = $name;
+    public function setUsername( string $username ): self {
+        $this->username = $username;
         return $this;
     }
     public function setEmail(string $email): self {
@@ -46,16 +49,5 @@ class User {
     public function setPassword(string $password): self {
         $this->password = $password;
         return $this;
-    }
-
-    public static function registration(UserRegistrationDTO $dto): self {
-        $user = new self();
-        $user->setName($dto->name);
-        $user->setEmail($dto->email);
-        $user->setClient($dto->client);
-        $user->created = new \DateTimeImmutable("now");
-		 // Hash the password!!
-        $user->setPassword($dto->password);
-        return $user;
     }
 }
