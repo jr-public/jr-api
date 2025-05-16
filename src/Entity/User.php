@@ -10,21 +10,24 @@ class User {
     #[ORM\GeneratedValue]
     private int|null $id = null;
 
-    #[ORM\Column(type: 'string')]
-    private string $username;
-
     #[ORM\ManyToOne(targetEntity: Client::class)]
     #[ORM\JoinColumn(nullable:false)]
     private Client $client;
 
-    #[ORM\Column(type: 'datetime_immutable')]
-    private \DateTimeImmutable $created;
+    #[ORM\Column(type: 'string')]
+    private string $username;
 
      #[ORM\Column(type: 'string')]
     private string $email;
 
     #[ORM\Column(type: 'string')]
     private string $password;
+
+    #[ORM\Column(type: 'string')]
+    private string $status = 'pending';
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private \DateTimeImmutable $created;
     
     public function __construct() {
         $this->created = new \DateTimeImmutable();
