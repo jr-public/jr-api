@@ -13,7 +13,7 @@ class UserRegistrationDTO {
     public string $email;
 
     #[Assert\NotBlank]
-    #[Assert\Length(min: 8, max: 255)]
+    #[Assert\Length(min: 4, max: 255)]
     public string $password;
 
     #[Assert\NotBlank]

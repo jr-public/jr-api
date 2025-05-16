@@ -2,6 +2,9 @@
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
 require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
+// Import Symfony Validator
+use Symfony\Component\Validator\Validation;
+
 $message = '';
 $error = '';
 
@@ -12,25 +15,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $query->getResult();
     $Client = $result[0];
 
-    $username = $_POST['username'] ?? '';
+    $username = $_POST['username'] ?? '';  // This should be changed to 'username' in the form
     $email = $_POST['email'] ?? '';
     $password = $_POST['password'] ?? '';
 
     try {
+        // Create validator instance
+        $validator = Validation::createValidatorBuilder()
+            ->enableAttributeMapping()
+            ->getValidator();
+        // Create DTO
         $dto = new \App\DTO\UserRegistrationDTO($username, $email, $password, $Client);
-        // VALIDATE!
-        $service = new App\Service\RegistrationService($entityManager);
+        
+        // Create service with both entity manager AND validator
+        $service = new App\Service\RegistrationService($entityManager, $validator);
+        
+        // Register user
         $user = $service->registration($dto);
-        // 5. Display success message or user details
+        
+        // Display success message
         $message = "User object created successfully in memory!<br>";
-        $message .= "Name: " . htmlspecialchars($user->get('username')) . "<br>";
+        $message .= "Username: " . htmlspecialchars($user->get('username')) . "<br>";
         $message .= "Email: " . htmlspecialchars($user->get('email')) . "<br>";
         $message .= "Password: " . htmlspecialchars($user->get('password')) . "<br>";
         $message .= "Client Name: " . htmlspecialchars($user->get('client')->get('name')) . "<br>";
         $message .= "Created At: " . $user->get('created')->format('Y-m-d H:i:s') . "<br>";
     } catch (Exception $e) {
-        // Catch potential errors during object creation
-        $error = "Error creating user object: " . htmlspecialchars($e->getMessage());
+        // Catch validation errors and other exceptions
+        $error = "Error creating user: " . htmlspecialchars($e->getMessage());
     }
 }
 
@@ -61,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="POST" action="">
         <div>
-            <label for="username">username:</label><br>
+            <label for="username">Username:</label><br>
             <input type="text" id="username" name="username" required value="<?= htmlspecialchars($_POST['username'] ?? 'jotaerre') ?>">
         </div>
         <br>
