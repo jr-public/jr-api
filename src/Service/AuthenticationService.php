@@ -4,7 +4,8 @@ namespace App\Service;
 use App\DTO\UserAuthDTO;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
-
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 class AuthenticationService {
     private EntityManagerInterface $entityManager;
 
@@ -16,24 +17,42 @@ class AuthenticationService {
     public function authenticate(UserAuthDTO $dto): ?User {
         // Get the default repository for the User entity
         $userRepository = $this->entityManager->getRepository(User::class);
-
-        // Find the user by email
-        /** @var User|null $user */
         $user = $userRepository->findOneBy(['username' => $dto->username]);
 
         // If user not found, authentication fails
         if (!$user) {
-            return null;
+            throw new \Exception('USER_NOT_FOUND');
         }
 
-        // IMPORTANT: Comparing plain text passwords. This is insecure and MUST be changed
-        // to use password_verify() with hashed passwords in a production environment.
+        // Authentication successful
         if ($user->get('password') === $dto->password) {
-            // Authentication successful
             return $user;
-        } else {
-            // Password does not match
-            return null;
+        } 
+        // Password does not match
+        else {
+            throw new \Exception('INVALID_PASSWORD');
         }
     }
+    public function generateToken( User $user, string $device ): string {
+        $issued_at = time();
+        $expiration = $issued_at + 3600; // Token valid for 1 hour
+
+        $payload = [
+            'iat' => $issued_at,           // Issued at
+            'exp' => $expiration,          // Expiration time
+            'sub' => $user->get('client')->get('id'), // Subject (client ID)
+            'data' => $user->get('id'),
+            'dev' => $device
+        ];
+        return JWT::encode($payload, getenv("JWT_SECRET"), 'HS256');
+    }
+    public function validateToken(string $token, string $device ): User {
+		$decoded = JWT::decode($token, new Key(getenv("JWT_SECRET"), 'HS256'));
+		if ( $decoded->dev != $device ) {
+            throw new \Exception('BAD_DEVICE');
+        }
+		$user = $this->entityManager->find(User::class, $decoded->data);
+        return $user;
+    }
+
 }

@@ -5,7 +5,7 @@ require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
+    $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
     $device = 'DEVICE_DEV';
 
@@ -15,13 +15,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // $clientResult = $query->getResult();
     // $requestingClient = $clientResult[0];
 
-    $authDto = new \App\DTO\UserAuthDTO($email, $password, $device);
-    // Validate
-    $service = new \App\Service\AuthenticationService($entityManager);
-    $authenticatedUser = $service->authenticate($authDto);
+    
+    try {
+        $authDto    = new \App\DTO\UserAuthDTO($username, $password, $device);
+        // Validate
+        $service    = new \App\Service\AuthenticationService($entityManager);
+        $user       = $service->authenticate($authDto);
+        $token      = $service->generateToken($user, $device);
+        $user       = $service->validateToken($token, $device);
+    } catch (\Throwable $th) {
+        echo "Authentication fail:<br />";
+        die($th->getMessage());
+    }
 
-    if ($authenticatedUser) {
-        $message = "Login successful for: " . htmlspecialchars($authenticatedUser->get('name'));
+
+    if ($user) {
+        $message = "Login successful for: " . htmlspecialchars($user->get('username'));
     } else {
         $message = "Login failed. Invalid email or password.";
     }
@@ -55,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST" action="">
-        <div><label for="email">Email:</label><br><input type="email" id="email" name="email" required value="<?= htmlspecialchars($_POST['email'] ?? 'jotaerre@email.com') ?>"></div><br>
+        <div><label for="username">username:</label><br><input type="text" id="username" name="username" required value="<?= htmlspecialchars($_POST['username'] ?? 'jotaerre') ?>"></div><br>
         <div><label for="password">Password:</label><br><input type="password" id="password" name="password" required value="<?= htmlspecialchars($_POST['password'] ?? '1234') ?>"></div><br>
         <button type="submit">Login</button>
     </form>
