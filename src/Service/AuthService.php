@@ -14,7 +14,7 @@ class AuthService {
         $user   = $this->authenticate($username, $password);
         $user   = $this->authorize($user);
         $claims['sub'] = $user->get('id');
-        $jwt_s  = new JwtService(getenv('JWT_SECRET'));
+        $jwt_s  = new JwtService();
         $token  = $jwt_s->createToken($claims);
         return ['token' => $token, 'user' => $user->toArray()];
     }
@@ -38,7 +38,7 @@ class AuthService {
         }
         else {
             $jwt = $data;
-            $decoded = new JWTService(getenv('JWT_SECRET'));
+            $decoded = new JWTService();
             $decoded = $decoded->validateToken($jwt, $requiredClaims);
             if (!$decoded) {
                 throw new \Exception('INVALID_TOKEN');

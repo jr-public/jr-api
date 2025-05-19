@@ -31,15 +31,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $service = new App\Service\RegistrationService($entityManager, $validator);
         
         // Register user
-        $user = $service->registration($dto);
-        
+        $registration = $service->registration($dto);
+        $user = $registration['user'];
         // Display success message
-        $message = "User object created successfully in memory!<br>";
-        $message .= "Username: " . htmlspecialchars($user->get('username')) . "<br>";
-        $message .= "Email: " . htmlspecialchars($user->get('email')) . "<br>";
-        $message .= "Password: " . htmlspecialchars($user->get('password')) . "<br>";
-        $message .= "Client Name: " . htmlspecialchars($user->get('client')->get('name')) . "<br>";
-        $message .= "Created At: " . $user->get('created')->format('Y-m-d H:i:s') . "<br>";
+        $message = "User object created successfully!<br>";
+        $message .= "Username: " . htmlspecialchars($user['username']) . "<br>";
+        $message .= "Client Name: " . htmlspecialchars($user['client']['id']) . "<br>";
+        $message .= "Created At: " . $user['created']->format('Y-m-d H:i:s') . "<br>";
+        $message .= "Token: " . htmlspecialchars($registration['token']) . "<br>";
+        $message .= "<a href='activation.php?token=" . htmlspecialchars($registration['token']) . "'>Activate Account</a>";
+
     } catch (Exception $e) {
         // Catch validation errors and other exceptions
         $error = "Error creating user: " . htmlspecialchars($e->getMessage());

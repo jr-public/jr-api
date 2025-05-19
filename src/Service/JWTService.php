@@ -14,7 +14,7 @@ class JWTService {
     private int $defaultTtl;
 
     public function __construct(?string $secretKey = null, string $algo = 'HS256', int $defaultTtl = 3600) {
-        $this->secretKey    = $secretKey ?? getenv('JWT_SECRET_KEY');
+        $this->secretKey    = $secretKey ?? getenv('JWT_SECRET');
         $this->algo         = $algo;
         $this->defaultTtl   = $defaultTtl;
     }

@@ -63,4 +63,12 @@ class User {
         $this->password = $password;
         return $this;
     }
+
+
+
+    public function activate(): self {
+        $this->status = 'active';
+        return $this;
+    }
+    
 }
