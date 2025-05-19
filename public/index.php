@@ -5,34 +5,28 @@ require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $device = 'DEVICE_DEV';
+    // DEV GETTING CLIENT
+    $dql = "SELECT c FROM App\Entity\Client c ORDER BY c.id DESC";
+    $query = $entityManager->createQuery($dql);
+    $query->setMaxResults(1);
+    $clientResult = $query->getResult();
 
-    // $dql = "SELECT c FROM App\Entity\Client c ORDER BY c.id DESC"; // Example: Get the "default" or last client
-    // $query = $entityManager->createQuery($dql);
-    // $query->setMaxResults(1);
-    // $clientResult = $query->getResult();
-    // $requestingClient = $clientResult[0];
-
+    $requestingClient = $clientResult[0];
+    $requestingDevice = "DEV_DEVICE";
     
+
     try {
-        $authDto    = new \App\DTO\UserAuthDTO($username, $password, $device);
-        // Validate
-        $service    = new \App\Service\AuthenticationService($entityManager);
-        $user       = $service->authenticate($authDto);
-        $token      = $service->generateToken($user, $device);
-        $user       = $service->validateToken($token, $device);
-    } catch (\Throwable $th) {
-        echo "Authentication fail:<br />";
-        die($th->getMessage());
-    }
-
-
-    if ($user) {
+        $auth_s = new \App\Service\AuthService($entityManager);
+        $claims = [
+            'iss' => $requestingClient->get('id'),
+            'dev' => $requestingDevice,
+        ];
+        $auth   = $auth_s->login($_POST['username'] ?? '', $_POST['password'] ?? '', $claims);
+        $user   = $auth_s->authorize($auth['token'], $claims);
+        
         $message = "Login successful for: " . htmlspecialchars($user->get('username'));
-    } else {
-        $message = "Login failed. Invalid email or password.";
+    } catch (\Throwable $th) {
+        $message = "Login failed.<br />" . $th->getMessage();
     }
 }
 ?>
@@ -55,11 +49,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h1>User Login</h1>
     <?php if ($message && str_contains($message, "successful")): ?>
         <div class="message success">
-            <?= htmlspecialchars($message) ?>
+            <?= $message ?>
         </div>
     <?php elseif ($message): ?>
         <div class="message error">
-            <?= htmlspecialchars($message) ?>
+            <?= $message ?>
         </div>
     <?php endif; ?>
 

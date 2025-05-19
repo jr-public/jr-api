@@ -33,6 +33,16 @@ class User {
         $this->created = new \DateTimeImmutable();
     }
     
+    public function toArray(): array {
+        return [
+            'id' => $this->id,
+            'email' => $this->email,
+            'username' => $this->username,
+            'created' => $this->created,
+            'status' => $this->status,
+            'client' => $this->client->toArray()
+        ];
+    }
     public function get( string $prop ) {
         return $this->$prop ?? null;
     }
