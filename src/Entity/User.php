@@ -22,6 +22,9 @@ class User {
      #[ORM\Column(type: 'string')]
     private string $email;
 
+     #[ORM\Column(type: 'string')]
+    private string $role = 'user';
+
     #[ORM\Column(type: 'string')]
     private string $password;
 
@@ -38,8 +41,10 @@ class User {
     public function toArray(): array {
         return [
             'id' => $this->id,
-            'email' => $this->email,
             'username' => $this->username,
+            'email' => $this->email,
+            'role' => $this->role,
+            'password' => $this->password,
             'created' => $this->created,
             'status' => $this->status,
             'client' => $this->client->toArray()
