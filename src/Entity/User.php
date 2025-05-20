@@ -65,11 +65,22 @@ class User {
         $this->password = $password;
         return $this;
     }
-
-
-
     public function activate(): self {
-        $this->status = 'active';
+        if ( $this->status == 'pending' ) {
+            $this->status = 'active';
+        }
+        return $this;
+    }
+    public function block(): self {
+        if ( $this->status != 'blocked' ) {
+            $this->status = 'blocked';
+        }
+        return $this;
+    }
+    public function unblock(): self {
+        if ( $this->status == 'blocked' ) {
+            $this->status = 'active';
+        }
         return $this;
     }
     
