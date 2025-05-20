@@ -2,6 +2,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Entity\Client;
 use Doctrine\ORM\EntityManagerInterface;
 class AuthService {
     private EntityManagerInterface $entityManager;
@@ -11,17 +12,22 @@ class AuthService {
     }
 
     public function login( string $username, string $password, array $claims = [] ): array {
-        $user   = $this->authenticate($username, $password);
+        $user   = $this->authenticate($username, $password, $claims['iss'] ?? '');
         $user   = $this->authorize($user);
         $claims['sub'] = $user->get('id');
         $jwt_s  = new JwtService();
         $token  = $jwt_s->createToken($claims);
         return ['token' => $token, 'user' => $user->toArray()];
     }
-    public function authenticate( string $username, string $password ): User {
+    public function authenticate( string $username, string $password, string $client_id ): User {
         // Get the default repository for the User entity
+        $client = $this->entityManager->find(Client::class, $client_id);
+        if (!$client) {
+            throw new \Exception('CLIENT_NOT_FOUND');
+        }
+
         $userRepository = $this->entityManager->getRepository(User::class);
-        $user = $userRepository->findOneBy(['username' => $username]);
+        $user = $userRepository->findOneBy(['username' => $username, 'client' => $client]);
 
         if (!$user) {
             throw new \Exception('USER_NOT_FOUND');

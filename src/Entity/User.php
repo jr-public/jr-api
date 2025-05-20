@@ -1,9 +1,11 @@
 <?php
 namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping\UniqueConstraint;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
+#[UniqueConstraint(fields:['username', 'client'])]
 class User {
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]
