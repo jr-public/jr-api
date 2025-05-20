@@ -11,7 +11,14 @@ class Client {
     private int|null $id = null;
     #[ORM\Column(type: 'string')]
     private string $name;
+
     
+    public function toArray(): array {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+        ];
+    }
     public function get( string $prop ) {
 		return $this->$prop ?? null;
 	}

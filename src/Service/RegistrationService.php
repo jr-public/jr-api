@@ -15,7 +15,7 @@ class RegistrationService {
         $this->validator = $validator;
     }
 
-    public function registration(UserRegistrationDTO $dto): User {
+    public function registration(UserRegistrationDTO $dto): array {
         // Validate the DTO first
         $violations = $this->validator->validate($dto);
         if (count($violations) > 0) {
@@ -34,6 +34,35 @@ class RegistrationService {
         $user->setPassword($dto->password);
         
         $this->entityManager->persist($user);
+        $this->entityManager->flush();
+        
+        $jwt_s = new JWTService();
+        $token = $jwt_s->createActivationToken($user->get('id'));
+        
+        return ['token' => $token, 'user' => $user->toArray()];
+    }
+    public function activation(string $token): User {
+        $jwt_s = new JWTService();
+        $userId = $jwt_s->validateActivationToken($token);
+        
+        if (!$userId) {
+            throw new \InvalidArgumentException('Invalid or expired activation token');
+        }
+        
+        // Find the user
+        $user = $this->entityManager->find(User::class, $userId);
+        
+        if (!$user) {
+            throw new \InvalidArgumentException('User not found');
+        }
+        
+        // Check if already activated
+        if ($user->get('status') === 'active') {
+            return $user; // Already activated
+        }
+        
+        // Update user status to active
+        $user->activate();
         $this->entityManager->flush();
         
         return $user;
