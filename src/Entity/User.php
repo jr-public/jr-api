@@ -31,6 +31,9 @@ class User {
     #[ORM\Column(type: 'string')]
     private string $status = 'pending';
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $reset_password = false;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $created;
     
@@ -47,6 +50,7 @@ class User {
             'password' => $this->password,
             'created' => $this->created,
             'status' => $this->status,
+            'reset_password' => $this->reset_password,
             'client' => $this->client->toArray()
         ];
     }
@@ -86,6 +90,15 @@ class User {
         if ( $this->status == 'blocked' ) {
             $this->status = 'active';
         }
+        return $this;
+    }
+    public function resetPassword(): self {
+        $this->reset_password = true;
+        return $this;
+    }
+    public function resetedPassword( string $new_password ): self {
+        $this->reset_password = false;
+        $this->password = $new_password;
         return $this;
     }
     

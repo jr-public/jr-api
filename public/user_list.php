@@ -23,7 +23,8 @@ try {
 	$active_user = $auth->authorize($_SESSION['jotaerre_token'], $claims);
 	define('ACTIVE_USER', $active_user);
 } catch (\Throwable $th) {
-	die($th->getMessage());
+	header("Location: index.php?error=".$th->getMessage());
+	die();
 }
 
 $messages = [];
@@ -42,8 +43,13 @@ if ( isset($_GET['action']) ) {
 			case 'unblock':
 				$ums->unblockUser($t_user);
 			break;
+            // Para estos casos puedo hacer ums con el t_user
 			case 'activate':
 				$t_user->activate();
+				$entityManager->flush();
+			break;
+			case 'reset_password':
+				$t_user->resetPassword();
 				$entityManager->flush();
 			break;
 			default:
@@ -128,6 +134,7 @@ try {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Status</th>
+                <th>Reset pass</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -139,6 +146,7 @@ try {
                     <td><?= htmlspecialchars($user['email']) ?></td>
                     <td><?= htmlspecialchars($user['role']) ?></td>
                     <td class="status-<?= htmlspecialchars($user['status']) ?>"><?= htmlspecialchars($user['status']) ?></td>
+                    <td><?= $user['reset_password'] == false ? "" : "true" ?></td>
                     <td>
                         <select name="action" onchange="if(this.value) window.location.href=this.value;">
                             <option value="">Select Action</option>
@@ -148,6 +156,9 @@ try {
                                 <option value="?action=unblock&id=<?= $user['id'] ?>">Unblock</option>
                             <?php elseif ($user['status'] === 'pending'): ?>
                                 <option value="?action=activate&id=<?= $user['id'] ?>">Activate</option>
+                            <?php endif; ?>
+                            <?php if (!$user['reset_password']): ?>
+                                <option value="?action=reset_password&id=<?= $user['id'] ?>">Reset pass</option>
                             <?php endif; ?>
                             <option value="?action=delete&id=<?= $user['id'] ?>">Delete</option>
                         </select>

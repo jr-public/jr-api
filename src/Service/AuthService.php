@@ -13,7 +13,7 @@ class AuthService {
 
     public function login( string $username, string $password, array $claims = [] ): array {
         $user   = $this->authenticate($username, $password, $claims['iss'] ?? '');
-        $user   = $this->authorize($user);
+        // $user   = $this->authorize($user);
         $claims['sub'] = $user->get('id');
         $jwt_s  = new JwtService();
         $token  = $jwt_s->createToken($claims);
@@ -57,6 +57,9 @@ class AuthService {
 
         if ($user->get('status') !== 'active') {
             throw new \Exception('USER_NOT_ACTIVE');
+        }
+        if ($user->get('reset_password')) {
+            throw new \Exception('RESET_PASSWORD');
         }
 
         return $user;

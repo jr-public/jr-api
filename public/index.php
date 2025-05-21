@@ -20,10 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'dev' => $requestingDevice,
         ];
         $auth   = $auth_s->login($_POST['username'] ?? '', $_POST['password'] ?? '', $claims);
-        $user   = $auth_s->authorize($auth['token'], $claims);
-        
         session_start();
         $_SESSION['jotaerre_token'] = $auth['token'];
+        if ( $auth['user']['reset_password'] ) {
+            header("Location: reset_password.php?id=" . $auth['user']['id']);
+            die();
+        }
         header("Location: user_list.php");
         die();
     } catch (\Throwable $th) {
