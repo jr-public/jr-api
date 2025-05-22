@@ -57,8 +57,8 @@ class RegistrationService {
             return $user;
         }
         // Update user status
-        $user->activate();
-        $this->entityManager->flush();
+        $ums = new UserManagementService($this->entityManager, $user);
+        $ums->activate($user);
         
         return $user;
     }

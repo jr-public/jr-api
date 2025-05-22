@@ -43,14 +43,11 @@ if ( isset($_GET['action']) ) {
 			case 'unblock':
 				$ums->unblockUser($t_user);
 			break;
-            // Para estos casos puedo hacer ums con el t_user
 			case 'activate':
-				$t_user->activate();
-				$entityManager->flush();
+				$ums->activate($t_user);
 			break;
 			case 'reset_password':
-				$t_user->resetPassword();
-				$entityManager->flush();
+				$ums->resetPassword($t_user);
 			break;
 			default:
 			break;

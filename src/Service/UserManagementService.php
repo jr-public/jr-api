@@ -47,20 +47,38 @@ class UserManagementService {
         $this->entityManager->flush();
         return $targetUser;
     }
-
-    private function verifyPermissionToManage(User $targetUser): void {
+    public function activate(User $targetUser): User {
+        $this->verifyPermissionToManage($targetUser, true);
+        $targetUser->activate();
+        $this->entityManager->flush();
+        return $targetUser;
+    }
+    public function resetPassword(User $targetUser): User {
+        $this->verifyPermissionToManage($targetUser, true);
+        $targetUser->resetPassword();
+        $this->entityManager->flush();
+        return $targetUser;
+    }
+    private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {
         $actingRole = $this->actingUser->get('role');
         $targetRole = $targetUser->get('role');
-                
+        
         if ($this->actingUser->get('client')->get('id') !== $targetUser->get('client')->get('id')) {
             throw new \Exception('Cannot manage users from different clients');
         }
-        elseif (!isset(self::ROLE_HIERARCHY[$actingRole]) || !in_array($targetRole, self::ROLE_HIERARCHY[$actingRole])) {
+        if (!isset(self::ROLE_HIERARCHY[$actingRole])) {
+            throw new \Exception('Invalid acting role');
+        }
+        if ($this->actingUser->get('id') != $targetUser->get('id') && !in_array($targetRole, self::ROLE_HIERARCHY[$actingRole])) {
             throw new \Exception(sprintf(
                 'User with role %s does not have permission to manage users with role %s',
                 $actingRole,
                 $targetRole
             ));
+        }
+        // i dont think i need the first part of this conditional
+        if ( $this->actingUser->get('id') == $targetUser->get('id') && !$allow_self ) {
+            throw new \Exception('Cannot manage self');
         }
     }
 }
