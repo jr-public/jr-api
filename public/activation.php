@@ -61,7 +61,7 @@ if ($token) {
     <?php endif; ?>
 
     <?php if ($success): ?>
-        <p>You can now <a href="index.php">log in</a> to your account.</p>
+        <p>You can now <a href="login.php">log in</a> to your account.</p>
     <?php else: ?>
         <p>If you don't have an activation link, please check your email or <a href="registration.php">register again</a>.</p>
     <?php endif; ?>

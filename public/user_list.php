@@ -23,7 +23,7 @@ try {
 	$active_user = $auth->authorize($_SESSION['jotaerre_token'], $claims);
 	define('ACTIVE_USER', $active_user);
 } catch (\Throwable $th) {
-	header("Location: index.php?error=".$th->getMessage());
+	header("Location: login.php?error=".$th->getMessage());
 	die();
 }
 
@@ -167,7 +167,7 @@ try {
 
     <p>
         <a href="registration.php">Register New User</a> | 
-        <a href="index.php">Login Page</a> |
+        <a href="login.php">Login Page</a> |
         <a href="refresh_token.php">Refresh token</a>
     </p>
 </body>

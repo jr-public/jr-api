@@ -12,17 +12,17 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$user = $entityManager->find("App\Entity\User", $_POST['user_id']);
 	if (!$user) {
-		header("Location: index.php?error=User not found");
+		header("Location: login.php?error=User not found");
 		die();
 	}
 	$user->resetedPassword($_POST['new_password']);
     $entityManager->flush();
-    header("Location: index.php");
+    header("Location: login.php");
     die();
 }
 
 if ( !isset($_GET['id']) ) {
-	header("Location: index.php?error=Missing user ID for password reset");
+	header("Location: login.php?error=Missing user ID for password reset");
 	die();
 }
 
