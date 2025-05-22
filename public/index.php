@@ -65,5 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div><label for="password">Password:</label><br><input type="password" id="password" name="password" required value="<?= htmlspecialchars($_POST['password'] ?? '1234') ?>"></div><br>
         <button type="submit">Login</button>
     </form>
+    <p>
+        <a href="activation.php">Activate Account</a> |
+        <a href="registration.php">Register</a> |
+        <a href="forgot_password.php">Forgot Password?</a>
+    </p>
 </body>
 </html>
