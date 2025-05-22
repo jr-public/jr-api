@@ -12,8 +12,10 @@ class AuthService {
     }
 
     public function login( string $username, string $password, array $claims = [] ): array {
-        $user   = $this->authenticate($username, $password, $claims['iss'] ?? '');
-        // $user   = $this->authorize($user);
+        if (!isset($claims['iss'])) {
+            throw new \Exception('ISSUER_NOT_FOUND');
+        }
+        $user   = $this->authenticate($username, $password, $claims['iss']);
         $claims['sub'] = $user->get('id');
         $jwt_s  = new JwtService();
         $token  = $jwt_s->createToken($claims);

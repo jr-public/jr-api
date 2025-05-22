@@ -168,6 +168,10 @@ try {
         </tbody>
     </table>
 
-    <p><a href="registration.php">Register New User</a> | <a href="index.php">Login Page</a></p>
+    <p>
+        <a href="registration.php">Register New User</a> | 
+        <a href="index.php">Login Page</a> |
+        <a href="refresh_token.php">Refresh token</a>
+    </p>
 </body>
 </html>

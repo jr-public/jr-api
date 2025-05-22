@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $claims = [
             'iss' => $requestingClient->get('id'),
             'dev' => $requestingDevice,
+            'type' => 'session'
         ];
         $auth   = $auth_s->login($_POST['username'] ?? '', $_POST['password'] ?? '', $claims);
         session_start();

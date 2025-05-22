@@ -37,7 +37,9 @@ class JWTService {
     public function refreshToken(string $token, ?int $ttl = null): string {
         $decoded = $this->validateToken($token);
         return $this->createToken([
+            'iss' => $decoded->iss,
             'sub' => $decoded->sub,
+            'dev' => $decoded->dev,
             'type' => $decoded->type
         ], $ttl);
     }
