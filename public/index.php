@@ -10,10 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $query = $entityManager->createQuery($dql);
     $query->setMaxResults(1);
     $clientResult = $query->getResult();
-
     $requestingClient = $clientResult[0];
     $requestingDevice = "DEV_DEVICE";
-    
 
     try {
         $auth_s = new \App\Service\AuthService($entityManager);
@@ -22,9 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'dev' => $requestingDevice,
         ];
         $auth   = $auth_s->login($_POST['username'] ?? '', $_POST['password'] ?? '', $claims);
-        $user   = $auth_s->authorize($auth['token'], $claims);
-        
-        $message = "Login successful for: " . htmlspecialchars($user->get('username'));
+        session_start();
+        $_SESSION['jotaerre_token'] = $auth['token'];
+        if ( $auth['user']['reset_password'] ) {
+            header("Location: reset_password.php?id=" . $auth['user']['id']);
+            die();
+        }
+        header("Location: user_list.php");
+        die();
     } catch (\Throwable $th) {
         $message = "Login failed.<br />" . $th->getMessage();
     }
