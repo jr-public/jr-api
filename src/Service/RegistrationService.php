@@ -37,31 +37,26 @@ class RegistrationService {
         $this->entityManager->flush();
         
         $jwt_s = new JWTService();
-        $token = $jwt_s->createActivationToken($user->get('id'));
-        
+        $token = $jwt_s->createToken([
+            'sub'   => $user->get('id'),
+            'type'  => 'activation'
+        ]);
         return ['token' => $token, 'user' => $user->toArray()];
     }
     public function activation(string $token): User {
-        $jwt_s = new JWTService();
-        $userId = $jwt_s->validateActivationToken($token);
-        
-        if (!$userId) {
-            throw new \InvalidArgumentException('Invalid or expired activation token');
-        }
-        
-        // Find the user
-        $user = $this->entityManager->find(User::class, $userId);
-        
+        $jwt_s      = new JWTService();
+        $decoded    = $jwt_s->validateToken($token, [
+            'type' => 'activation'
+        ]);
+        $userId     = $decoded->sub;
+        $user       = $this->entityManager->find(User::class, $userId);
         if (!$user) {
-            throw new \InvalidArgumentException('User not found');
+            throw new \Exception('User not found');
         }
-        
-        // Check if already activated
         if ($user->get('status') === 'active') {
-            return $user; // Already activated
+            return $user;
         }
-        
-        // Update user status to active
+        // Update user status
         $user->activate();
         $this->entityManager->flush();
         

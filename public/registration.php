@@ -90,5 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <br>
         <button type="submit">Register</button>
     </form>
+    <p>
+        <a href="activation.php">Activate Account</a> |
+        <a href="index.php">Login</a> |
+        <a href="forgot_password.php">Forgot Password?</a>
+    </p>
 </body>
 </html>
