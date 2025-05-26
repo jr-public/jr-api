@@ -1,9 +1,10 @@
 <?php
 namespace App\Entity;
+use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\UniqueConstraint;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[UniqueConstraint(fields:['username', 'client'])]
 class User {
@@ -40,7 +41,9 @@ class User {
     public function __construct() {
         $this->created = new \DateTimeImmutable();
     }
-    
+    public function __toString() {
+        return json_encode($this->toArray());
+    }
     public function toArray(): array {
         return [
             'id' => $this->id,

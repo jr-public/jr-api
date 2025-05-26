@@ -20,6 +20,7 @@
             "App\\Controller\\": "src/Controller/",
             "App\\DTO\\": "src/DTO/",
             "App\\Entity\\": "src/Entity/",
+            "App\\Repository\\": "src/Repository/",
             "App\\Service\\": "src/Service/"
         },
         "files": [
