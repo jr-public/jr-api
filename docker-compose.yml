@@ -7,12 +7,12 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./000-default.conf:/etc/apache2/sites-available/000-default.conf
       - ./composer.json:/var/www/html/composer.json
       - ./composer.lock:/var/www/html/composer.lock
       - vendor_data:/var/www/html/vendor
 
       - ./bin:/var/www/html/bin
+      - ./config:/var/www/html/config
       - ./public:/var/www/html/public
       - ./src:/var/www/html/src
       - ./tests:/var/www/html/tests

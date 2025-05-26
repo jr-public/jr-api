@@ -12,6 +12,7 @@ RUN docker-php-ext-install pdo pdo_pgsql
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN a2enmod rewrite
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

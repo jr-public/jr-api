@@ -23,7 +23,7 @@ try {
 	$active_user = $auth->authorize($_SESSION['jotaerre_token'], $claims);
 	define('ACTIVE_USER', $active_user);
 } catch (\Throwable $th) {
-	header("Location: index.php?error=".$th->getMessage());
+	header("Location: login.php?error=".$th->getMessage());
 	die();
 }
 
@@ -33,7 +33,7 @@ try {
     $token = $jwt_s->refreshToken($_SESSION['jotaerre_token']);
     $_SESSION['jotaerre_token'] = $token;
 } catch (\Throwable $th) {
-	header("Location: index.php?error=".$th->getMessage());
+	header("Location: login.php?error=".$th->getMessage());
 }
 
 ?>

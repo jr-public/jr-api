@@ -1,9 +1,11 @@
 <?php
 namespace App\Service;
 
+use App\Service\JWTService;
 use App\Entity\User;
 use App\Entity\Client;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 class AuthService {
     private EntityManagerInterface $entityManager;
 
@@ -17,7 +19,7 @@ class AuthService {
         }
         $user   = $this->authenticate($username, $password, $claims['iss']);
         $claims['sub'] = $user->get('id');
-        $jwt_s  = new JwtService();
+        $jwt_s  = new JWTService();
         $token  = $jwt_s->createToken($claims);
         return ['token' => $token, 'user' => $user->toArray()];
     }
@@ -66,5 +68,11 @@ class AuthService {
 
         return $user;
     }
-
+    public function extractJwt(Request $request): string {
+        $authHeader = $request->headers->get('Authorization');
+        if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
+            return substr($authHeader, 7); // Remove "Bearer " prefix
+        }
+        throw new \Exception('INVALID_TOKEN: '.$authHeader);
+    }
 }
