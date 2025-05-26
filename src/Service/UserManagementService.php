@@ -57,6 +57,12 @@ class UserManagementService {
         $this->verifyPermissionToManage($targetUser, true);
         $targetUser->resetPassword();
         $this->entityManager->flush();
+        // Generate reset token
+        // $jwtService = new JWTService();
+        // $resetToken = $jwtService->createToken([
+        //     'sub' => $targetUser->get('id'),
+        //     'type' => 'password_reset'
+        // ], 3600); // 1 hour expiry
         return $targetUser;
     }
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {

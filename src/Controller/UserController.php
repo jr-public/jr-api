@@ -2,14 +2,9 @@
 namespace App\Controller;
 
 use App\Entity\User;
-// use App\Entity\Client;
-// use App\DTO\UserRegistrationDTO;
-// use App\Service\AuthService;
-// use App\Service\RegistrationService;
 use App\Service\UserManagementService;
-// use App\Service\JWTService;
 use Doctrine\ORM\EntityManagerInterface;
-// use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController {
     private User $activeUser;
@@ -20,77 +15,52 @@ class UserController {
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        User $activeUser
-        // ValidatorInterface $validator,
-        // AuthService $authService,
-        // RegistrationService $registrationService
+        User $activeUser,
+        // ValidatorInterface $validator = null,
+        // AuthService $authService = null,
+        // RegistrationService $registrationService = null
     ) {
         $this->entityManager = $entityManager;
         $this->activeUser = $activeUser;
-        // echo "HOLA";
-        // die();
-        // $this->validator = $validator;
-        // $this->authService = $authService;
-        // $this->registrationService = $registrationService;
+        // $this->validator = $validator ?? new \Symfony\Component\Validator\Validation::createValidator();
+        // $this->authService = $authService ?? new AuthService($entityManager);
+        // $this->registrationService = $registrationService ?? new RegistrationService($entityManager, $this->validator);
     }
-    // public function list(string $role = null, bool $active = null, string $sort = null, int $limit = null, int $page = 1): array {
-    //     return $args;
-    // }
-    public function get(int $id): array {
-        return [
-            "id" => $id,
-            "username" => "john_doe"
-        ];
-    }
-    /*
-
-    public function block(int $userId, string $token, ?string $reason = null): array {
-        // Implementation will use UserManagementService to block user
+    private function findUserById(int $id): User {
+        $repo = $this->entityManager->getRepository(User::class);
+        $user = $repo->get($id, $this->activeUser->get('client'));
+        if ( empty($user) ) {
+            throw new \RuntimeException('User not found', 404);
+        }
+        return $user;
     }
 
-    public function unblock(int $userId, string $token, ?string $reason = null): array {
-        // Implementation will use UserManagementService to unblock user
+    public function get(int $id): JsonResponse {
+        $targetUser = $this->findUserById($id);
+        return new JsonResponse([
+            'data' => $targetUser->toArray()
+        ], 200);
     }
 
-    public function activate(string $activationToken): array {
-        // Implementation will use RegistrationService to activate user
+    public function block(int $id, ?string $reason = null): JsonResponse {
+        $targetUser = $this->findUserById($id);
+        $ums = new UserManagementService($this->entityManager, $this->activeUser);
+        $updatedUser = $ums->blockUser($targetUser, $reason);
+        return new JsonResponse([], 200);
     }
 
-    public function register(string $username, string $email, string $password, int $clientId): array {
-        // Implementation will use RegistrationService to create new user
+    public function unblock(int $id, ?string $reason = null): JsonResponse {
+        $targetUser = $this->findUserById($id);
+        $ums = new UserManagementService($this->entityManager, $this->activeUser);
+        $updatedUser = $ums->unblockUser($targetUser, $reason);
+        return new JsonResponse([], 200);
     }
 
-    public function edit(
-        int $userId, 
-        string $token, 
-        ?string $username = null, 
-        ?string $email = null,
-        ?string $role = null
-    ): array {
-        // Implementation will update user data with validation
+    public function resetPassword(int $id): JsonResponse {
+        $targetUser = $this->findUserById($id);
+        $ums = new UserManagementService($this->entityManager, $this->activeUser);
+        $updatedUser = $ums->resetPassword($targetUser);
+        return new JsonResponse([], 200);
     }
 
-    public function delete(int $userId, string $token): array {
-        // Implementation will remove user (requires proper permissions)
-    }
-
-    public function create(
-        string $username, 
-        string $email, 
-        string $password, 
-        int $clientId, 
-        string $token,
-        string $role = 'user'
-    ): array {
-        // Implementation will create user directly (bypass registration flow)
-    }
-
-    public function password_forgot(string $email, int $clientId): array {
-        // Implementation will generate reset token and send email
-    }
-
-    public function password_reset(string $resetToken, string $newPassword): array {
-        // Implementation will validate token and update password
-    }
-    */
 }

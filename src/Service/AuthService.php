@@ -70,10 +70,9 @@ class AuthService {
     }
     public function extractJwt(Request $request): string {
         $authHeader = $request->headers->get('Authorization');
-        $request->headers->set('Authorization', null);
         if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
             return substr($authHeader, 7); // Remove "Bearer " prefix
         }
-        throw new \Exception('INVALID_TOKEN');
+        throw new \Exception('INVALID_TOKEN: '.$authHeader);
     }
 }

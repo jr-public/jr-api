@@ -30,8 +30,7 @@ try {
 	//
 	$dispatch 	= new DispatchService($entityManager, $user);
 	$response 	= $dispatch->dispatch($routeInfo, $request);
-	//
-	echo json_encode($response);
+	echo $response;
 } catch (\Throwable $th) {
     http_response_code($th->getCode() ?: 500);
     echo json_encode(['error' => $th->getMessage()]);
