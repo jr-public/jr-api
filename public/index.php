@@ -9,7 +9,7 @@ use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
 use Symfony\Component\HttpFoundation\Request;
-
+use Symfony\Component\Validator\Validation;
 
 try {
 	//
@@ -28,7 +28,10 @@ try {
 	$router 	= new RouterService();
     $routeInfo 	= $router->match($request);
 	//
-	$dispatch 	= new DispatchService($entityManager, $user);
+	$validator = Validation::createValidatorBuilder()
+		->enableAttributeMapping()
+		->getValidator();
+	$dispatch 	= new DispatchService($entityManager, $user, $validator);
 	$response 	= $dispatch->dispatch($routeInfo, $request);
 	echo $response;
 } catch (\Throwable $th) {

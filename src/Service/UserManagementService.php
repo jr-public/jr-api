@@ -53,16 +53,22 @@ class UserManagementService {
         $this->entityManager->flush();
         return $targetUser;
     }
-    public function resetPassword(User $targetUser): User {
+    public function resetPassword(User $targetUser, ?string $newPassword = null ): User {
         $this->verifyPermissionToManage($targetUser, true);
-        $targetUser->resetPassword();
-        $this->entityManager->flush();
-        // Generate reset token
-        // $jwtService = new JWTService();
-        // $resetToken = $jwtService->createToken([
-        //     'sub' => $targetUser->get('id'),
-        //     'type' => 'password_reset'
-        // ], 3600); // 1 hour expiry
+        if (empty($newPassword)) {
+            $targetUser->resetPassword();
+            $this->entityManager->flush();
+            // Generate reset token
+            // $jwtService = new JWTService();
+            // $resetToken = $jwtService->createToken([
+            //     'sub' => $targetUser->get('id'),
+            //     'type' => 'password_reset'
+            // ], 3600); // 1 hour expiry
+        }
+        else {
+            $targetUser->setPassword($newPassword);
+            $this->entityManager->flush();
+        }
         return $targetUser;
     }
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {

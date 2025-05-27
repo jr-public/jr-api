@@ -4,12 +4,14 @@ namespace App\Service;
 use Symfony\Component\HttpFoundation\Request;
 use ReflectionMethod;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 // use Psr\Log\LoggerInterface; // Example for another common dependency
 
 class DispatchService
 {
     private EntityManagerInterface $entityManager;
     private ?object $activeUser; // Or your specific User class, e.g., App\Entity\User
+    private ValidatorInterface $validator;
     // private ?LoggerInterface $logger; // Example of another injectable dependency
 
     /**
@@ -19,11 +21,13 @@ class DispatchService
      */
     public function __construct(
         EntityManagerInterface $entityManager,
-        ?object $activeUser = null
+        ?object $activeUser,
+        ValidatorInterface $validator,
         // ?LoggerInterface $logger = null
     ) {
         $this->entityManager = $entityManager;
         $this->activeUser = $activeUser;
+        $this->validator = $validator;
         // $this->logger = $logger;
     }
 
@@ -42,7 +46,7 @@ class DispatchService
         Request $request
     ): mixed {
         
-        $controllerInstance = new $route['_controller']($this->entityManager, $this->activeUser);
+        $controllerInstance = new $route['_controller']($this->entityManager, $this->activeUser, $this->validator);
         
         $reflectionMethod = new \ReflectionMethod($route['_controller'], $route['_method']);
         if (!$reflectionMethod->isPublic()) {
