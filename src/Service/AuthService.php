@@ -14,6 +14,12 @@ class AuthService {
     }
 
     public function login( string $username, string $password, array $claims = [] ): array {
+        // Esto es de public login.php
+        // $claims = [
+        //     'iss' => $requestingClient->get('id'),
+        //     'dev' => $requestingDevice,
+        //     'type' => 'session'
+        // ];
         if (!isset($claims['iss'])) {
             throw new \Exception('ISSUER_NOT_FOUND');
         }

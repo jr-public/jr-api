@@ -5,23 +5,20 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
-// require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
-use App\Bootstrap\DoctrineBootstrap;
 use App\Bootstrap\DIContainerBootstrap;
 use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
+use App\Service\UserContextService;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Validator\Validation;
 
 try {
 	//
 	$container = DIContainerBootstrap::create();
-	$entityManager = DoctrineBootstrap::create();
 	//
 	$request	= Request::createFromGlobals();
-	// $request->attributes->set('device', $request->headers->get('User-Agent'));
+	$device = $request->headers->get('User-Agent', 'unknown');
 	//
 	$auth = $container->get(AuthService::class);
 	// $token 		= $auth->extractJwt($request);
@@ -32,15 +29,19 @@ try {
 	]);
 	// END DEV
 	$user 		= $auth->authorize($token);
+	$userContext = new UserContextService($user, $device);
+	// This makes the container stateful, and i dont like it
+	// I need to find a different solution but it will do for now.
+	// 28/05/25
+	$container->set(UserContextService::class, $userContext);
 	//
 	$router = $container->get(RouterService::class);
     $routeInfo 	= $router->match($request);
 	//
-	$validator = Validation::createValidatorBuilder()
-		->enableAttributeMapping()
-		->getValidator();
-	$dispatch 	= new DispatchService($entityManager, $user, $validator);
-	$response 	= $dispatch->dispatch($routeInfo, $request);
+	$controllerInstance = $container->get($routeInfo['_controller']);
+	//
+	$dispatch = $container->get(DispatchService::class);
+	$response 	= $dispatch->dispatch($controllerInstance, $routeInfo, $request);
 	echo $response;
 } catch (\Throwable $th) {
     http_response_code($th->getCode() ?: 500);

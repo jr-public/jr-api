@@ -5,31 +5,22 @@ use App\DTO\UserRegistrationDTO;
 use App\Entity\Client;
 use App\Entity\User;
 use App\Service\RegistrationService;
+use App\Service\UserContextService;
 use App\Service\UserManagementService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserController {
-    private User $activeUser;
-    private EntityManagerInterface $entityManager;
-    private ValidatorInterface $validator;
-    // private AuthService $authService;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        User $activeUser,
-        ValidatorInterface $validator,
-        // AuthService $authService = null,
-    ) {
-        $this->entityManager = $entityManager;
-        $this->activeUser = $activeUser;
-        $this->validator = $validator;
-        // $this->authService = $authService ?? new AuthService($entityManager);
-    }
+        private readonly EntityManagerInterface $entityManager,
+        private readonly UserContextService $userContext,
+        private readonly UserManagementService $ums,
+        private readonly RegistrationService $regs,
+    ) {}
+
     private function findUserById(int $id): User {
         $repo = $this->entityManager->getRepository(User::class);
-        $user = $repo->get($id, $this->activeUser->get('client'));
+        $user = $repo->get($id, $this->userContext->getUser()->get('client'));
         if ( empty($user) ) {
             throw new \RuntimeException('User not found', 404);
         }
@@ -45,8 +36,7 @@ class UserController {
 
     public function block(int $id, ?string $reason = null): JsonResponse {
         $targetUser = $this->findUserById($id);
-        $ums = new UserManagementService($this->entityManager, $this->activeUser);
-        $updatedUser = $ums->blockUser($targetUser, $reason);
+        $updatedUser = $this->ums->blockUser($targetUser, $reason);
         return new JsonResponse([
             'data' => []
         ], 200);
@@ -54,8 +44,7 @@ class UserController {
 
     public function unblock(int $id, ?string $reason = null): JsonResponse {
         $targetUser = $this->findUserById($id);
-        $ums = new UserManagementService($this->entityManager, $this->activeUser);
-        $updatedUser = $ums->unblockUser($targetUser, $reason);
+        $updatedUser = $this->ums->unblockUser($targetUser, $reason);
         return new JsonResponse([
             'data' => []
         ], 200);
@@ -64,8 +53,7 @@ class UserController {
     public function register(string $username, string $email, string $password, string $client_id): JsonResponse {
         $Client = $this->entityManager->find(Client::class, $client_id);
         $dto = new UserRegistrationDTO($username, $email, $password, $Client);
-        $service = new RegistrationService($this->entityManager, $this->validator);
-        $registration = $service->registration($dto);
+        $registration = $this->regs->registration($dto);
         return new JsonResponse([
             'data' => $registration
         ], 200);
@@ -73,8 +61,7 @@ class UserController {
 
     public function resetPassword(int $id, ?string $password = null): JsonResponse {
         $targetUser = $this->findUserById($id);
-        $ums = new UserManagementService($this->entityManager, $this->activeUser);
-        $updatedUser = $ums->resetPassword($targetUser, $password);
+        $updatedUser = $this->ums->resetPassword($targetUser, $password);
         return new JsonResponse([
             'data' => []
         ], 200);
@@ -89,8 +76,7 @@ class UserController {
 
     public function activate(string $id): JsonResponse {
         $User = $this->entityManager->find(User::class, $id);
-        $ums = new UserManagementService($this->entityManager, $this->activeUser);
-        $updatedUser = $ums->activate($User);
+        $updatedUser = $this->ums->activate($User);
         return new JsonResponse([
             'data' => []
         ], 200);

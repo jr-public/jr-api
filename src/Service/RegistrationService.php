@@ -7,13 +7,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationService {
-    private EntityManagerInterface $entityManager;
-    private ValidatorInterface $validator;
-
-    public function __construct(EntityManagerInterface $entityManager, ValidatorInterface $validator) {
-        $this->entityManager = $entityManager;
-        $this->validator = $validator;
-    }
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager, 
+        private readonly ValidatorInterface $validator
+    ) {}
 
     public function registration(UserRegistrationDTO $dto): array {
         // Validate the DTO first
