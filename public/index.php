@@ -3,8 +3,10 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
-require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
+// require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
+use App\Bootstrap\DoctrineBootstrap;
+use App\Bootstrap\DIContainerBootstrap;
 use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
@@ -13,7 +15,19 @@ use Symfony\Component\Validator\Validation;
 
 try {
 	//
+	$entityManager = DoctrineBootstrap::create();
+	//
 	$request	= Request::createFromGlobals();
+	$request->attributes->set('device', $request->headers->get('User-Agent'));
+	//
+	// echo $request->getContent();
+	// die();
+	// print_r(getallheaders());
+	// die();
+	// echo $request->headers->get('origin');
+	// echo "<br />";
+	// echo $request->getHost();
+	// die();
 	//
 	$auth 		= new AuthService($entityManager);
 	// $token 		= $auth->extractJwt($request);
