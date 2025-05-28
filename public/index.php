@@ -2,6 +2,8 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+header('Content-Type: application/json');
+
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
 // require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
@@ -15,21 +17,13 @@ use Symfony\Component\Validator\Validation;
 
 try {
 	//
+	$container = DIContainerBootstrap::create();
 	$entityManager = DoctrineBootstrap::create();
 	//
 	$request	= Request::createFromGlobals();
-	$request->attributes->set('device', $request->headers->get('User-Agent'));
+	// $request->attributes->set('device', $request->headers->get('User-Agent'));
 	//
-	// echo $request->getContent();
-	// die();
-	// print_r(getallheaders());
-	// die();
-	// echo $request->headers->get('origin');
-	// echo "<br />";
-	// echo $request->getHost();
-	// die();
-	//
-	$auth 		= new AuthService($entityManager);
+	$auth = $container->get(AuthService::class);
 	// $token 		= $auth->extractJwt($request);
 	// DEV
 	$jwt_s		= new App\Service\JWTService();
@@ -39,7 +33,7 @@ try {
 	// END DEV
 	$user 		= $auth->authorize($token);
 	//
-	$router 	= new RouterService();
+	$router = $container->get(RouterService::class);
     $routeInfo 	= $router->match($request);
 	//
 	$validator = Validation::createValidatorBuilder()
