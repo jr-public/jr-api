@@ -14,8 +14,6 @@ use Doctrine\ORM\EntityManagerInterface;
  * directly modifying User entities.
  */
 class UserManagementService {
-    private EntityManagerInterface $entityManager;
-    private User $actingUser;
     
     // Role hierarchy defined as constants for clarity
     private const ROLE_USER = 'user';
@@ -29,10 +27,10 @@ class UserManagementService {
         self::ROLE_USER => []
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, User $actingUser) {
-        $this->entityManager = $entityManager;
-        $this->actingUser = $actingUser;
-    }
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager, 
+        private readonly UserContextService $userContext
+    ) {}
 
     public function blockUser(User $targetUser, ?string $reason = null): User {
         $this->verifyPermissionToManage($targetUser);
@@ -53,29 +51,36 @@ class UserManagementService {
         $this->entityManager->flush();
         return $targetUser;
     }
-    public function resetPassword(User $targetUser): User {
+    public function resetPassword(User $targetUser, ?string $newPassword = null ): User {
         $this->verifyPermissionToManage($targetUser, true);
-        $targetUser->resetPassword();
-        $this->entityManager->flush();
-        // Generate reset token
-        // $jwtService = new JWTService();
-        // $resetToken = $jwtService->createToken([
-        //     'sub' => $targetUser->get('id'),
-        //     'type' => 'password_reset'
-        // ], 3600); // 1 hour expiry
+        if (empty($newPassword)) {
+            $targetUser->resetPassword();
+            $this->entityManager->flush();
+            // Generate reset token
+            // $jwtService = new JWTService();
+            // $resetToken = $jwtService->createToken([
+            //     'sub' => $targetUser->get('id'),
+            //     'type' => 'password_reset'
+            // ], 3600); // 1 hour expiry
+        }
+        else {
+            $targetUser->setPassword($newPassword);
+            $this->entityManager->flush();
+        }
         return $targetUser;
     }
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {
-        $actingRole = $this->actingUser->get('role');
+        $actingUser = $this->userContext->getUser();
+        $actingRole = $actingUser->get('role');
         $targetRole = $targetUser->get('role');
         
-        if ($this->actingUser->get('client')->get('id') !== $targetUser->get('client')->get('id')) {
+        if ($actingUser->get('client')->get('id') !== $targetUser->get('client')->get('id')) {
             throw new \Exception('Cannot manage users from different clients');
         }
         if (!isset(self::ROLE_HIERARCHY[$actingRole])) {
             throw new \Exception('Invalid acting role');
         }
-        if ($this->actingUser->get('id') != $targetUser->get('id') && !in_array($targetRole, self::ROLE_HIERARCHY[$actingRole])) {
+        if ($actingUser->get('id') != $targetUser->get('id') && !in_array($targetRole, self::ROLE_HIERARCHY[$actingRole])) {
             throw new \Exception(sprintf(
                 'User with role %s does not have permission to manage users with role %s',
                 $actingRole,
@@ -83,7 +88,7 @@ class UserManagementService {
             ));
         }
         // i dont think i need the first part of this conditional
-        if ( $this->actingUser->get('id') == $targetUser->get('id') && !$allow_self ) {
+        if ( $actingUser->get('id') == $targetUser->get('id') && !$allow_self ) {
             throw new \Exception('Cannot manage self');
         }
     }

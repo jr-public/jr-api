@@ -2,49 +2,11 @@
 namespace App\Service;
 
 use Symfony\Component\HttpFoundation\Request;
-use ReflectionMethod;
-use Doctrine\ORM\EntityManagerInterface;
-// use Psr\Log\LoggerInterface; // Example for another common dependency
 
-class DispatchService
-{
-    private EntityManagerInterface $entityManager;
-    private ?object $activeUser; // Or your specific User class, e.g., App\Entity\User
-    // private ?LoggerInterface $logger; // Example of another injectable dependency
-
-    /**
-     * @param EntityManagerInterface $entityManager The Doctrine EntityManager.
-     * @param object|null $activeUser The currently authenticated user, or null.
-     * // @param LoggerInterface|null $logger An optional logger instance.
-     */
-    public function __construct(
-        EntityManagerInterface $entityManager,
-        ?object $activeUser = null
-        // ?LoggerInterface $logger = null
-    ) {
-        $this->entityManager = $entityManager;
-        $this->activeUser = $activeUser;
-        // $this->logger = $logger;
-    }
-
-    /**
-     * Instantiates the controller, resolves its method arguments, and invokes it.
-     *
-     * @param string $controllerClass The fully qualified class name of the controller.
-     * @param ReflectionMethod $reflectionMethod The ReflectionMethod for the action to call.
-     * @param array $routeParameters Parameters extracted from the route (e.g., {id} from /users/{id}).
-     * @param Request $request The current HTTP request object.
-     * @return mixed The result returned by the controller method.
-     * @throws \RuntimeException If a required argument cannot be resolved.
-     */
-    public function dispatch(
-        array $route,
-        Request $request
-    ): mixed {
+class DispatchService {
+    public function dispatch(object $controllerInstance, array $route, Request $request): mixed {
         
-        $controllerInstance = new $route['_controller']($this->entityManager, $this->activeUser);
-        
-        $reflectionMethod = new \ReflectionMethod($route['_controller'], $route['_method']);
+        $reflectionMethod = new \ReflectionMethod($controllerInstance, $route['_method']);
         if (!$reflectionMethod->isPublic()) {
             throw new \RuntimeException("Controller method '".$route['_method']."' is not public", 403);
         }

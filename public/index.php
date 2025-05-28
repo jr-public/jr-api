@@ -2,20 +2,25 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
-require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
+header('Content-Type: application/json');
 
+require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
+
+use App\Bootstrap\DIContainerBootstrap;
 use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
+use App\Service\UserContextService;
 use Symfony\Component\HttpFoundation\Request;
-
 
 try {
 	//
-	$request	= Request::createFromGlobals();
+	$container = DIContainerBootstrap::create();
 	//
-	$auth 		= new AuthService($entityManager);
+	$request	= Request::createFromGlobals();
+	$device = $request->headers->get('User-Agent', 'unknown');
+	//
+	$auth = $container->get(AuthService::class);
 	// $token 		= $auth->extractJwt($request);
 	// DEV
 	$jwt_s		= new App\Service\JWTService();
@@ -24,12 +29,19 @@ try {
 	]);
 	// END DEV
 	$user 		= $auth->authorize($token);
+	$userContext = new UserContextService($user, $device);
+	// This makes the container stateful, and i dont like it
+	// I need to find a different solution but it will do for now.
+	// 28/05/25
+	$container->set(UserContextService::class, $userContext);
 	//
-	$router 	= new RouterService();
+	$router = $container->get(RouterService::class);
     $routeInfo 	= $router->match($request);
 	//
-	$dispatch 	= new DispatchService($entityManager, $user);
-	$response 	= $dispatch->dispatch($routeInfo, $request);
+	$controllerInstance = $container->get($routeInfo['_controller']);
+	//
+	$dispatch = $container->get(DispatchService::class);
+	$response 	= $dispatch->dispatch($controllerInstance, $routeInfo, $request);
 	echo $response;
 } catch (\Throwable $th) {
     http_response_code($th->getCode() ?: 500);
