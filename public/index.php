@@ -23,6 +23,9 @@ try {
 		$token = $auth->extractJwt($request);
 		$user = $auth->authorize($token);
 		$userContext = new UserContextService($user); //, $device
+		// This makes the container stateful, and i dont like it
+		// I need to find a different solution but it will do for now.
+		// 28/05/25
 		$container->set(UserContextService::class, $userContext);
 	}
 	//

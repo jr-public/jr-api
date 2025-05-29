@@ -21,10 +21,19 @@ class UserController {
         private readonly AuthService $auths,
         private readonly Request $request
     ) {}
-
+    private function findClientFromRequest (): Client {
+        $client = $this->entityManager->getRepository(Client::class)->findOneBy([
+            'domain' => $this->request->getHost()
+        ]);
+        if (!$client) {
+            throw new \RuntimeException('Client not found for domain: ' . $this->request->getHost(), 404);
+        }
+        return $client;
+    }
     private function findUserById(int $id): User {
+        
         $repo = $this->entityManager->getRepository(User::class);
-        $user = $repo->get($id, $this->userContext->getUser()->get('client'));
+        $user = $repo->get($id, $this->findClientFromRequest()->get('id'));
         if ( empty($user) ) {
             throw new \RuntimeException('User not found', 404);
         }
@@ -54,8 +63,8 @@ class UserController {
         ], 200);
     }
 
-    public function register(string $username, string $email, string $password, string $client_id): JsonResponse {
-        $Client = $this->entityManager->find(Client::class, $client_id);
+    public function register(string $username, string $email, string $password): JsonResponse {
+        $Client = $this->entityManager->find(Client::class, $this->findClientFromRequest()->get('id'));
         $dto = new UserRegistrationDTO($username, $email, $password, $Client);
         $registration = $this->regs->registration($dto);
         return new JsonResponse([
@@ -87,9 +96,7 @@ class UserController {
     }
 
     public function login(string $username, string $password): JsonResponse { 
-        $client = $this->entityManager->getRepository(Client::class)->findOneBy([
-            'domain' => $this->request->getHost()
-        ]);
+        $client = $this->findClientFromRequest();
 	    $device = $this->request->headers->get('User-Agent', 'unknown');
         $login = $this->auths->login($username, $password, $client->get('id'), $device);
         return new JsonResponse([
