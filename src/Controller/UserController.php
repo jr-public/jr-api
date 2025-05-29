@@ -6,34 +6,22 @@ use App\Entity\Client;
 use App\Entity\User;
 use App\Service\AuthService;
 use App\Service\RegistrationService;
-use App\Service\UserContextService;
+use App\Service\RequestContextService;
 use App\Service\UserManagementService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 
 class UserController {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        // private readonly UserContextService $userContext,
+        private readonly RequestContextService $context,
         private readonly UserManagementService $ums,
         private readonly RegistrationService $regs,
-        private readonly AuthService $auths,
-        private readonly Request $request
+        private readonly AuthService $auths
     ) {}
-    private function findClientFromRequest (): Client {
-        $client = $this->entityManager->getRepository(Client::class)->findOneBy([
-            'domain' => $this->request->getHost()
-        ]);
-        if (!$client) {
-            throw new \RuntimeException('Client not found for domain: ' . $this->request->getHost(), 404);
-        }
-        return $client;
-    }
     private function findUserById(int $id): User {
-        
         $repo = $this->entityManager->getRepository(User::class);
-        $user = $repo->get($id, $this->findClientFromRequest()->get('id'));
+        $user = $repo->get($id, $this->context->getClient()->get('id'));
         if ( empty($user) ) {
             throw new \RuntimeException('User not found', 404);
         }
@@ -64,7 +52,7 @@ class UserController {
     }
 
     public function register(string $username, string $email, string $password): JsonResponse {
-        $Client = $this->entityManager->find(Client::class, $this->findClientFromRequest()->get('id'));
+        $Client = $this->context->getClient();
         $dto = new UserRegistrationDTO($username, $email, $password, $Client);
         $registration = $this->regs->registration($dto);
         return new JsonResponse([
@@ -96,8 +84,8 @@ class UserController {
     }
 
     public function login(string $username, string $password): JsonResponse { 
-        $client = $this->findClientFromRequest();
-	    $device = $this->request->headers->get('User-Agent', 'unknown');
+        $client = $this->context->getClient();
+	    $device = $this->context->getDevice();
         $login = $this->auths->login($username, $password, $client->get('id'), $device);
         return new JsonResponse([
             'data' => [

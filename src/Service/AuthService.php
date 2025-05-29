@@ -3,7 +3,6 @@ namespace App\Service;
 
 use App\Service\JWTService;
 use App\Entity\User;
-use App\Entity\Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 class AuthService {

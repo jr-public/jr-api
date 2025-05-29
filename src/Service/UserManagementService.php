@@ -2,6 +2,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Service\RequestContextService;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -29,7 +30,7 @@ class UserManagementService {
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager, 
-        private readonly UserContextService $userContext
+        private readonly RequestContextService $requestContext
     ) {}
 
     public function blockUser(User $targetUser, ?string $reason = null): User {
@@ -70,7 +71,7 @@ class UserManagementService {
         return $targetUser;
     }
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {
-        $actingUser = $this->userContext->getUser();
+        $actingUser = $this->requestContext->getUser();
         $actingRole = $actingUser->get('role');
         $targetRole = $targetUser->get('role');
         

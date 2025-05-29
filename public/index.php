@@ -10,29 +10,39 @@ use App\Bootstrap\DIContainerBootstrap;
 use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
-use App\Service\UserContextService;
-use Symfony\Component\HttpFoundation\Request;
+use App\Service\RequestContextService;
 
 try {
 	//
 	$container 	= DIContainerBootstrap::create();
-	$request	= Request::createFromGlobals();
+	$context	= $container->get(RequestContextService::class);
+	$request	= $context->getRequest();
     $router 	= $container->get(RouterService::class)->match($request);
 	if ($router['_group'] != 'guest') {
-		$auth = $container->get(AuthService::class);
-		$token = $auth->extractJwt($request);
-		$user = $auth->authorize($token);
-		$userContext = new UserContextService($user); //, $device
-		// This makes the container stateful, and i dont like it
-		// I need to find a different solution but it will do for now.
-		// 28/05/25
-		$container->set(UserContextService::class, $userContext);
+		$auth 		= $container->get(AuthService::class);
+		$token 		= $auth->extractJwt($request);
+		$user 		= $auth->authorize($token);
+		$context 	= $context->setUser($user);
 	}
 	//
 	$instance 	= $container->get($router['_controller']);
 	$response 	= $container->get(DispatchService::class)->dispatch($instance, $router, $request);
 	echo $response;
 } catch (\Throwable $th) {
-    http_response_code($th->getCode() ?: 500);
-    echo json_encode(['error' => $th->getMessage()]);
+    http_response_code(500);
+    $errorResponse = [
+        'error' 	=> true,
+        'type' 		=> 'internal_error',
+        'code' 		=> 'INTERNAL_SERVER_ERROR',
+        'message' 	=> $th->getMessage(),
+        'context' 	=> []
+    ];
+    
+	$errorResponse['debug'] = [
+		'file' 	=> $th->getFile(),
+		'line' 	=> $th->getLine(),
+		'trace' => $th->getTraceAsString()
+	];
+    
+    echo json_encode($errorResponse);
 }

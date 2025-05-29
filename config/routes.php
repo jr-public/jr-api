@@ -12,11 +12,6 @@ return [
             'controller' => 'App\Controller\UserController::register',
             'methods' => ['POST'],
         ],
-        'user_activate' => [
-            'path' => '/guest/activate',
-            'controller' => 'App\Controller\UserController::activate',
-            'methods' => ['POST'],
-        ],
         'password_forgot' => [
             'path' => '/guest/forgot-password',
             'controller' => 'App\Controller\UserController::passwordForgot',
@@ -24,6 +19,11 @@ return [
         ],
     ],
     'user' => [
+        'user_activate' => [
+            'path' => '/guest/activate',
+            'controller' => 'App\Controller\UserController::activate',
+            'methods' => ['POST'],
+        ],
         'user_get' => [
             'path' => '/users/{id}',
             'controller' => 'App\Controller\UserController::get',
