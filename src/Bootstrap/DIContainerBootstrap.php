@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Bootstrap\DoctrineBootstrap;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 
 class DIContainerBootstrap {
@@ -22,6 +23,11 @@ class DIContainerBootstrap {
                 return Validation::createValidatorBuilder()
                     ->enableAttributeMapping()
                     ->getValidator();
+            }),
+        ]);
+        $builder->addDefinitions([
+            Request::class => \DI\factory(function () {
+                return Request::createFromGlobals();
             }),
         ]);
         return $builder->build();

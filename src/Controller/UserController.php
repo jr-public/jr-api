@@ -4,18 +4,22 @@ namespace App\Controller;
 use App\DTO\UserRegistrationDTO;
 use App\Entity\Client;
 use App\Entity\User;
+use App\Service\AuthService;
 use App\Service\RegistrationService;
 use App\Service\UserContextService;
 use App\Service\UserManagementService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 class UserController {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly UserContextService $userContext,
+        // private readonly UserContextService $userContext,
         private readonly UserManagementService $ums,
         private readonly RegistrationService $regs,
+        private readonly AuthService $auths,
+        private readonly Request $request
     ) {}
 
     private function findUserById(int $id): User {
@@ -79,6 +83,20 @@ class UserController {
         $updatedUser = $this->ums->activate($User);
         return new JsonResponse([
             'data' => []
+        ], 200);
+    }
+
+    public function login(string $username, string $password): JsonResponse { 
+        $client = $this->entityManager->getRepository(Client::class)->findOneBy([
+            'domain' => $this->request->getHost()
+        ]);
+	    $device = $this->request->headers->get('User-Agent', 'unknown');
+        $login = $this->auths->login($username, $password, $client->get('id'), $device);
+        return new JsonResponse([
+            'data' => [
+                'user' => $login['user'],
+                'token' => $login['token']
+            ]
         ], 200);
     }
 

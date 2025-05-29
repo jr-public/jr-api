@@ -11,7 +11,8 @@ class Client {
     private int|null $id = null;
     #[ORM\Column(type: 'string')]
     private string $name;
-
+    #[ORM\Column(type: 'string')]
+    private string $domain;
     
     public function toArray(): array {
         return [
@@ -24,6 +25,7 @@ class Client {
 	}
 	public function init( array $data ): self {
 		$this->name     = $data['name'];
+		$this->domain   = $data['domain'];
 		return $this;
 	}
 }
