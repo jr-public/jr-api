@@ -22,6 +22,7 @@
             "App\\Controller\\": "src/Controller/",
             "App\\DTO\\": "src/DTO/",
             "App\\Entity\\": "src/Entity/",
+            "App\\Exception\\": "src/Exception/",
             "App\\Repository\\": "src/Repository/",
             "App\\Service\\": "src/Service/"
         },

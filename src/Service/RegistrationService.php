@@ -3,13 +3,17 @@ namespace App\Service;
 
 use App\DTO\UserRegistrationDTO;
 use App\Entity\User;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use App\Service\RequestContextService;
+use App\Service\JWTService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationService {
     public function __construct(
         private readonly EntityManagerInterface $entityManager, 
+        private readonly JWTService $jwts, 
         private readonly RequestContextService $context,
         private readonly ValidatorInterface $validator
     ) {}
@@ -35,8 +39,8 @@ class RegistrationService {
         $this->entityManager->persist($user);
         $this->entityManager->flush();
         
-        $jwt_s = new JWTService();
-        $token = $jwt_s->createToken([
+        $jwts = new JWTService();
+        $token = $jwts->create([
             'iss'   => $this->context->getClient()->get('id'),
             'sub'   => $user->get('id'),
             'type'  => 'activation'
@@ -44,14 +48,20 @@ class RegistrationService {
         return ['token' => $token, 'user' => $user->toArray()];
     }
     public function activation(string $token): User {
-        $jwt_s      = new JWTService();
-        $decoded    = $jwt_s->validateToken($token, [
+        $jwts      = new JWTService();
+        $requiredClaims = [
             'iss'   => $this->context->getClient()->get('id'),
             'type'  => 'activation'
-        ]);
+        ];
+        $decoded    = $jwts->decode($token);
+        foreach ($requiredClaims as $key => $expectedValue) {
+            if (!isset($decoded->$key) || $decoded->$key !== $expectedValue) {
+                throw new ValidationException("Invalid token: missing or incorrect claim '$key'");
+            }
+        }
         $user       = $this->entityManager->find(User::class, $decoded->sub);
         if (!$user) {
-            throw new \Exception('User not found');
+            throw new NotFoundException('User not found');
         }
         if ($user->get('status') === 'active') {
             return $user;

@@ -18,7 +18,13 @@ class UserRepository extends EntityRepository {
         $user = $query->getOneOrNullResult();
         return $user;
     }
-    
+    public function findByUsernameAndClient(string $username, int $clientId): ?User {
+        $dql = 'SELECT u FROM App\Entity\User u WHERE u.username = :username AND u.client = :client_id';
+        return $this->getEntityManager()->createQuery($dql)
+            ->setParameter('username', $username)
+            ->setParameter('client_id', $clientId)
+            ->getOneOrNullResult();
+    }
     // public function findActiveUsersByClient(Client $client): array
     // {
     //     return $this->createQueryBuilder('u')

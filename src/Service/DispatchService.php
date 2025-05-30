@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Exception\ValidationException;
 use Symfony\Component\HttpFoundation\Request;
 
 class DispatchService {
@@ -8,7 +9,7 @@ class DispatchService {
         
         $reflectionMethod = new \ReflectionMethod($controllerInstance, $route['_method']);
         if (!$reflectionMethod->isPublic()) {
-            throw new \RuntimeException("Controller method '".$route['_method']."' is not public", 403);
+            throw new \RuntimeException("Controller method '".$route['_method']."' is not public", 500);
         }
 
         $arguments = [];
@@ -43,10 +44,9 @@ class DispatchService {
                     continue;
                 }
                 // If we reach here, a required parameter is missing and no default was provided.
-                throw new \RuntimeException(
+                throw new ValidationException(
                     "Missing required argument '{$paramName}' for method '{$reflectionMethod->getName()}' " .
-                    "in controller '{".$route['_controller']."}'",
-                    400
+                    "in controller '{".$route['_controller']."}'"
                 );
             }
 

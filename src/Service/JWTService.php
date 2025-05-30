@@ -1,8 +1,11 @@
 <?php
 namespace App\Service;
 
+use App\Exception\AuthException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException;
 
 class JWTService {
 
@@ -16,7 +19,7 @@ class JWTService {
         $this->defaultTtl   = $defaultTtl;
     }
 
-    public function createToken(array $claims, ?int $ttl = null): string {
+    public function create(array $claims, ?int $ttl = null): string {
         $now = time();
         $ttl = $ttl ?? $this->defaultTtl;
         $payload = array_merge($claims, [
@@ -25,22 +28,33 @@ class JWTService {
         ]);
         return JWT::encode($payload, $this->secretKey, $this->algo);
     }
-    public function validateToken(string $token, array $requiredClaims = []): object {
-        $decoded = JWT::decode($token, new Key($this->secretKey, $this->algo));
-        foreach ($requiredClaims as $key => $expected) {
-            if (!isset($decoded->$key) || $decoded->$key !== $expected) {
-                throw new \Exception('Invalid token');
-            }
+    public function decode(string $token): object {
+        try {
+            return JWT::decode($token, new Key($this->secretKey, $this->algo));
+        } catch (ExpiredException $e) {
+            throw new AuthException('Token has expired');
+        } catch (SignatureInvalidException $e) {
+            throw new AuthException('Invalid token signature');
+        } catch (\Exception $e) {
+            throw new AuthException('Invalid token: ' . $e->getMessage());
         }
-        return $decoded;
     }
-    public function refreshToken(string $token, ?int $ttl = null): string {
-        $decoded = $this->validateToken($token);
-        return $this->createToken([
-            'iss' => $decoded->iss,
-            'sub' => $decoded->sub,
-            'dev' => $decoded->dev,
-            'type' => $decoded->type
-        ], $ttl);
-    }
+    // public function validateToken(string $token, array $requiredClaims = []): object {
+    //     $decoded = JWT::decode($token, new Key($this->secretKey, $this->algo));
+    //     foreach ($requiredClaims as $key => $expected) {
+    //         if (!isset($decoded->$key) || $decoded->$key !== $expected) {
+    //             throw new \Exception('Invalid token');
+    //         }
+    //     }
+    //     return $decoded;
+    // }
+    // public function refreshToken(string $token, ?int $ttl = null): string {
+    //     $decoded = $this->validateToken($token);
+    //     return $this->createToken([
+    //         'iss' => $decoded->iss,
+    //         'sub' => $decoded->sub,
+    //         'dev' => $decoded->dev,
+    //         'type' => $decoded->type
+    //     ], $ttl);
+    // }
 }

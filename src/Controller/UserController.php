@@ -83,9 +83,7 @@ class UserController {
         ], 200);
     }
     public function login(string $username, string $password): JsonResponse { 
-        $client = $this->context->getClient();
-	    $device = $this->context->getDevice();
-        $login = $this->auths->login($username, $password, $client->get('id'), $device);
+        $login = $this->auths->login($username, $password);
         return new JsonResponse([
             'data' => [
                 'user' => $login['user'],

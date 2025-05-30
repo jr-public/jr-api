@@ -2,67 +2,66 @@
 namespace App\Service;
 
 use App\Service\JWTService;
+use App\Service\RequestContextService;
 use App\Entity\User;
+use App\Exception\AuthException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 class AuthService {
-    private EntityManagerInterface $entityManager;
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly JWTService $jwts,
+        private readonly RequestContextService $context
+    ) {}
 
-    public function __construct(EntityManagerInterface $entityManager) {
-        $this->entityManager = $entityManager;
-    }
-
-    public function login( string $username, string $password, string $client_id, string $device ): array {
-        $user   = $this->authenticate($username, $password, $client_id);
-        $claims = [
+    public function login( string $username, string $password ): array {
+        $user   = $this->authenticate($username, $password);
+        $jwts   = new JWTService();
+        $token  = $jwts->create([
             'sub' => $user->get('id'),
-            'iss' => $client_id,
-            'dev' => $device,
+            'iss' => $this->context->getClient()->get('id'),
+            'dev' => $this->context->getDevice(),
             'type' => 'session'
-        ];
-        $jwt_s  = new JWTService();
-        $token  = $jwt_s->createToken($claims);
+        ]);
         return ['token' => $token, 'user' => $user->toArray()];
     }
-    public function authenticate( string $username, string $password, string $client_id ): User {
-        $dql = 'SELECT u FROM App\Entity\User u WHERE u.username = :username AND u.client = :client_id';
-        $query = $this->entityManager->createQuery($dql)
-            ->setParameter('username', $username)
-            ->setParameter('client_id', $client_id);
-        $user = $query->getOneOrNullResult();
+    public function authenticate(string $username, string $password): User {
+        $userRepo = $this->entityManager->getRepository(User::class);
+        $user = $userRepo->findByUsernameAndClient($username, $this->context->getClient()->get('id'));
         if (!$user) {
-            throw new \Exception('USER_NOT_FOUND');
+            throw new AuthException('Invalid username or password');
         }
         elseif (!password_verify($password, $user->get('password'))) {
-            throw new \Exception('INVALID_PASSWORD');
+            throw new AuthException('Invalid username or password');
         }
         return $user;
     }
 
-    public function authorize( User|string $data, array $requiredClaims = [] ): User {
-        if ( $data instanceof User ) {
-            $user = $data;
+    public function authorize(string $jwt): User {
+        $jwtService = new JWTService();
+        $decoded = $jwtService->decode($jwt);
+        if (!isset($decoded->sub)) {
+            throw new AuthException('Invalid token: missing user identifier');
         }
-        else {
-            $jwt = $data;
-            $decoded = new JWTService();
-            $decoded = $decoded->validateToken($jwt, $requiredClaims);
-            if (!$decoded) {
-                throw new \Exception('INVALID_TOKEN');
-            }
-            $user = $this->entityManager->find(User::class, $decoded->sub);
-            if (!$user) {
-                throw new \Exception('USER_NOT_FOUND');
-            }
+        if (!isset($decoded->iss) || $decoded->iss !== $this->context->getClient()->get('id')) {
+            throw new AuthException('Invalid token: client mismatch');
         }
-
+        if (!isset($decoded->dev) || $decoded->dev !== $this->context->getDevice()) {
+            throw new AuthException('Invalid token: device mismatch');
+        }
+        if (!isset($decoded->type) || $decoded->type !== 'session') {
+            throw new AuthException('Invalid token: invalid token type');
+        }
+        $user = $this->entityManager->find(User::class, $decoded->sub);
+        if (!$user) {
+            throw new AuthException('Invalid token - user not found');
+        }
         if ($user->get('status') !== 'active') {
-            throw new \Exception('USER_NOT_ACTIVE');
+            throw new AuthException('Account is not active');
         }
         if ($user->get('reset_password')) {
-            throw new \Exception('RESET_PASSWORD');
+            throw new AuthException('Password reset required');
         }
-
         return $user;
     }
     public function extractJwt(Request $request): string {
@@ -70,6 +69,6 @@ class AuthService {
         if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
             return substr($authHeader, 7); // Remove "Bearer " prefix
         }
-        throw new \Exception('INVALID_TOKEN: '.$authHeader);
+        throw new AuthException('Missing or invalid Authorization header');
     }
 }
