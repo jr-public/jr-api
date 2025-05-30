@@ -1,10 +1,11 @@
 <?php
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
-require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
 // Import Symfony Validator
 
 use App\Bootstrap\DoctrineBootstrap;
+use App\Service\RequestContextService;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Validation;
 $entityManager = DoctrineBootstrap::create();
 
@@ -26,8 +27,9 @@ $entityManager->persist($client);
 $entityManager->flush();
 echo "Created new client: " . $client->get('name') . " (ID: " . $client->get('id') . ")<br />";
 
-// Create the registration service
-$service = new App\Service\RegistrationService($entityManager, $validator);
+$request = Request::createFromGlobals();
+$context = new RequestContextService($entityManager, $request);
+$service = new App\Service\RegistrationService($entityManager, $context, $validator);
 
 // Array of users to create
 $users = [
