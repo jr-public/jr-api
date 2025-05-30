@@ -12,18 +12,18 @@ return [
             'controller' => 'App\Controller\UserController::register',
             'methods' => ['POST'],
         ],
-        'password_forgot' => [
+        'user_password_forgot' => [
             'path' => '/guest/forgot-password',
             'controller' => 'App\Controller\UserController::passwordForgot',
             'methods' => ['POST'],
         ],
-    ],
-    'user' => [
         'user_activate' => [
             'path' => '/guest/activate',
             'controller' => 'App\Controller\UserController::activate',
-            'methods' => ['POST'],
+            'methods' => ['GET'],
         ],
+    ],
+    'user' => [
         'user_get' => [
             'path' => '/users/{id}',
             'controller' => 'App\Controller\UserController::get',

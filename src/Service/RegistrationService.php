@@ -3,12 +3,14 @@ namespace App\Service;
 
 use App\DTO\UserRegistrationDTO;
 use App\Entity\User;
+use App\Service\RequestContextService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class RegistrationService {
     public function __construct(
         private readonly EntityManagerInterface $entityManager, 
+        private readonly RequestContextService $context,
         private readonly ValidatorInterface $validator
     ) {}
 
@@ -27,14 +29,15 @@ class RegistrationService {
         $user = new User();
         $user->setUsername($dto->username);
         $user->setEmail($dto->email);
-        $user->setClient($dto->client);
         $user->setPassword($dto->password);
+        $user->setClient($this->context->getClient());
         
         $this->entityManager->persist($user);
         $this->entityManager->flush();
         
         $jwt_s = new JWTService();
         $token = $jwt_s->createToken([
+            'iss'   => $this->context->getClient()->get('id'),
             'sub'   => $user->get('id'),
             'type'  => 'activation'
         ]);
@@ -43,20 +46,18 @@ class RegistrationService {
     public function activation(string $token): User {
         $jwt_s      = new JWTService();
         $decoded    = $jwt_s->validateToken($token, [
-            'type' => 'activation'
+            'iss'   => $this->context->getClient()->get('id'),
+            'type'  => 'activation'
         ]);
-        $userId     = $decoded->sub;
-        $user       = $this->entityManager->find(User::class, $userId);
+        $user       = $this->entityManager->find(User::class, $decoded->sub);
         if (!$user) {
             throw new \Exception('User not found');
         }
         if ($user->get('status') === 'active') {
             return $user;
         }
-        // Update user status
-        $ums = new UserManagementService($this->entityManager, $user);
-        $ums->activate($user);
-        
+        $user->activate();
+        $this->entityManager->flush();
         return $user;
     }
 }

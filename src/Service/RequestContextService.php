@@ -7,15 +7,27 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 class RequestContextService {
 	
-	private User $user;
-	private Client $client;
-	private string $device;
+	private ?User $user 		= null;
+	private ?Client $client 	= null;
+	private ?string $device 	= null;
 
 	public function __construct(
 		private readonly EntityManagerInterface $entityManager, 
 		private readonly Request $request
 	) {}
 	
+    public function hasUser(): bool {
+		return !empty($this->user);
+	}
+
+	public function hasClient(): bool {
+		return !empty($this->client);
+	}
+
+	public function hasDevice(): bool {
+		return !empty($this->device);
+	}
+
     public function setUser(User $user): self {
 		$this->user = $user;
 		return $this;
@@ -31,14 +43,14 @@ class RequestContextService {
 	}
 
 	public function getUser(): User {
-		if (empty($this->user)) {
+		if (!$this->hasUser()) {
 			throw new \Exception("Request context user not found");
 		}
 		return $this->user;
 	}
 
 	public function getClient(): Client {
-		if (empty($this->client)) {
+		if (!$this->hasClient()) {
 			$client = $this->entityManager->getRepository(Client::class)->findOneBy([
 				'domain' => $this->request->getHost()
 			]);
@@ -51,7 +63,7 @@ class RequestContextService {
 	}
 
 	public function getDevice(): string {
-		if (empty($this->device)) {
+		if (!$this->hasDevice()) {
 			$this->setDevice($this->request->headers->get('User-Agent', 'unknown'));
 		}
 		return $this->device;

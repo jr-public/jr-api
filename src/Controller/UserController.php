@@ -2,7 +2,6 @@
 namespace App\Controller;
 
 use App\DTO\UserRegistrationDTO;
-use App\Entity\Client;
 use App\Entity\User;
 use App\Service\AuthService;
 use App\Service\RegistrationService;
@@ -52,8 +51,7 @@ class UserController {
     }
 
     public function register(string $username, string $email, string $password): JsonResponse {
-        $Client = $this->context->getClient();
-        $dto = new UserRegistrationDTO($username, $email, $password, $Client);
+        $dto = new UserRegistrationDTO($username, $email, $password);
         $registration = $this->regs->registration($dto);
         return new JsonResponse([
             'data' => $registration
@@ -75,14 +73,15 @@ class UserController {
         ], 200);
     }
 
-    public function activate(string $id): JsonResponse {
-        $User = $this->entityManager->find(User::class, $id);
-        $updatedUser = $this->ums->activate($User);
+    public function activate(string $token): JsonResponse {
+        $user = $this->regs->activation($token);
         return new JsonResponse([
-            'data' => []
+            'data' => [
+                'message' => 'Account activated successfully',
+                'user' => $user->toArray()
+            ]
         ], 200);
     }
-
     public function login(string $username, string $password): JsonResponse { 
         $client = $this->context->getClient();
 	    $device = $this->context->getDevice();

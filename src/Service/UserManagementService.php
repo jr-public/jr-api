@@ -46,12 +46,6 @@ class UserManagementService {
         $this->entityManager->flush();
         return $targetUser;
     }
-    public function activate(User $targetUser): User {
-        $this->verifyPermissionToManage($targetUser, true);
-        $targetUser->activate();
-        $this->entityManager->flush();
-        return $targetUser;
-    }
     public function resetPassword(User $targetUser, ?string $newPassword = null ): User {
         $this->verifyPermissionToManage($targetUser, true);
         if (empty($newPassword)) {
