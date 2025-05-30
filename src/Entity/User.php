@@ -74,7 +74,7 @@ class User {
         return $this;
     }
     public function setPassword(string $password): self {
-        $this->password = $password;
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
         return $this;
     }
     public function activate(): self {
@@ -101,7 +101,7 @@ class User {
     }
     public function resetedPassword( string $new_password ): self {
         $this->reset_password = false;
-        $this->password = $new_password;
+        $this->setPassword($new_password);
         return $this;
     }
     

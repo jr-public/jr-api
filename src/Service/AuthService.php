@@ -33,7 +33,7 @@ class AuthService {
         if (!$user) {
             throw new \Exception('USER_NOT_FOUND');
         }
-        elseif ($user->get('password') !== $password) {
+        elseif (!password_verify($password, $user->get('password'))) {
             throw new \Exception('INVALID_PASSWORD');
         }
         return $user;
