@@ -1,12 +1,11 @@
 <?php
 namespace App\Service;
 
+use App\Exception\NotFoundException;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
-use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\HttpFoundation\Request;
 
 class RouterService
@@ -41,27 +40,20 @@ class RouterService
         }
     }
 
-    public function match(Request $request): array
-    {
+    public function match(Request $request): array {
         $context = new RequestContext();
         $context->fromRequest($request);
 
         $matcher = new UrlMatcher($this->routes, $context);
 
-        try {
-            $routeInfo = $matcher->match($request->getPathInfo());
-            [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
-        } catch (ResourceNotFoundException $e) {
-            throw new \RuntimeException('Route not found', 404);
-        } catch (MethodNotAllowedException $e) {
-            throw new \RuntimeException('Method not allowed', 405);
-        }
+        $routeInfo = $matcher->match($request->getPathInfo());
+        [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
         
         if (!class_exists($controllerClass)) {
-            throw new \RuntimeException("Controller class '$controllerClass' not found", 404);
+            throw new NotFoundException("Controller class '$controllerClass' not found", 404);
         }
         if (!method_exists($controllerClass, $method)) {
-            throw new \RuntimeException("Controller method '$method' not found in class '$controllerClass'", 404);
+            throw new NotFoundException("Controller method '$method' not found in class '$controllerClass'", 404);
         }
         
         $routeInfo['_controller'] = $controllerClass;
