@@ -17,7 +17,7 @@ class DoctrineBootstrap {
             'driver' => 'pdo_pgsql',
             'user' => getenv('POSTGRES_USER'),
             'password' => getenv('POSTGRES_PASSWORD'),
-            'host' => getenv('POSTGRES_DB'),
+            'host' => getenv('POSTGRES_HOST'),
             'port' => getenv('POSTGRES_PORT'),
             'dbname' => getenv('POSTGRES_DB')
         ];
