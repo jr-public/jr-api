@@ -3,7 +3,6 @@ namespace App\Service;
 
 use App\Service\JWTService;
 use App\Entity\User;
-use App\Entity\Client;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 class AuthService {
@@ -13,32 +12,24 @@ class AuthService {
         $this->entityManager = $entityManager;
     }
 
-    public function login( string $username, string $password, array $claims = [] ): array {
-        // Esto es de public login.php
-        // $claims = [
-        //     'iss' => $requestingClient->get('id'),
-        //     'dev' => $requestingDevice,
-        //     'type' => 'session'
-        // ];
-        if (!isset($claims['iss'])) {
-            throw new \Exception('ISSUER_NOT_FOUND');
-        }
-        $user   = $this->authenticate($username, $password, $claims['iss']);
-        $claims['sub'] = $user->get('id');
+    public function login( string $username, string $password, string $client_id, string $device ): array {
+        $user   = $this->authenticate($username, $password, $client_id);
+        $claims = [
+            'sub' => $user->get('id'),
+            'iss' => $client_id,
+            'dev' => $device,
+            'type' => 'session'
+        ];
         $jwt_s  = new JWTService();
         $token  = $jwt_s->createToken($claims);
         return ['token' => $token, 'user' => $user->toArray()];
     }
     public function authenticate( string $username, string $password, string $client_id ): User {
-        // Get the default repository for the User entity
-        $client = $this->entityManager->find(Client::class, $client_id);
-        if (!$client) {
-            throw new \Exception('CLIENT_NOT_FOUND');
-        }
-
-        $userRepository = $this->entityManager->getRepository(User::class);
-        $user = $userRepository->findOneBy(['username' => $username, 'client' => $client]);
-
+        $dql = 'SELECT u FROM App\Entity\User u WHERE u.username = :username AND u.client = :client_id';
+        $query = $this->entityManager->createQuery($dql)
+            ->setParameter('username', $username)
+            ->setParameter('client_id', $client_id);
+        $user = $query->getOneOrNullResult();
         if (!$user) {
             throw new \Exception('USER_NOT_FOUND');
         }

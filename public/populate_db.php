@@ -3,7 +3,10 @@ require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
 require_once(getenv("PROJECT_ROOT") . 'src/doctrine-em.php');
 
 // Import Symfony Validator
+
+use App\Bootstrap\DoctrineBootstrap;
 use Symfony\Component\Validator\Validation;
+$entityManager = DoctrineBootstrap::create();
 
 echo "Starting database population...<br />";
 
@@ -15,7 +18,10 @@ $validator = Validation::createValidatorBuilder()
 // Create a new client specifically for these users
 echo "Creating new client for test users...<br />";
 $client = new \App\Entity\Client();
-$client->init(['name' => 'Test Client ' . date('Y-m-d H:i:s')]);
+$client->init([
+    'name' => 'Test Client ' . date('Y-m-d H:i:s'),
+    'domain' => 'localhost'
+]);
 $entityManager->persist($client);
 $entityManager->flush();
 echo "Created new client: " . $client->get('name') . " (ID: " . $client->get('id') . ")<br />";

@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 class RouterService
 {
     private RouteCollection $routes;
+    private array $routeGroups = [];
 
     public function __construct() {
         $this->routes = new RouteCollection();
@@ -22,16 +23,21 @@ class RouterService
     {
         $config = require $filePath;
 
-        foreach ($config as $name => $route) {
-            $this->routes->add($name, new Route(
-                $route['path'],
-                ['_controller' => $route['controller']],
-                $route['requirements'] ?? [],
-                [],
-                '',
-                [],
-                $route['methods'] ?? ['GET']
-            ));
+        foreach ($config as $groupName => $groupRoutes) {
+            foreach ($groupRoutes as $routeName => $route) {
+                $this->routes->add($routeName, new Route(
+                    $route['path'],
+                    ['_controller' => $route['controller']],
+                    $route['requirements'] ?? [],
+                    [],
+                    '',
+                    [],
+                    $route['methods'] ?? ['GET']
+                ));
+                
+                // Store which group this route belongs to
+                $this->routeGroups[$routeName] = $groupName;
+            }
         }
     }
 
@@ -50,16 +56,21 @@ class RouterService
         } catch (MethodNotAllowedException $e) {
             throw new \RuntimeException('Method not allowed', 405);
         }
+        
         if (!class_exists($controllerClass)) {
             throw new \RuntimeException("Controller class '$controllerClass' not found", 404);
         }
         if (!method_exists($controllerClass, $method)) {
             throw new \RuntimeException("Controller method '$method' not found in class '$controllerClass'", 404);
         }
+        
         $routeInfo['_controller'] = $controllerClass;
         $routeInfo['_method'] = $method;
+        
+        // Add the route group to the return info
+        $routeName = $routeInfo['_route'];
+        $routeInfo['_group'] = $this->routeGroups[$routeName] ?? 'unknown';
+        
         return $routeInfo;
     }
-
-    
 }
