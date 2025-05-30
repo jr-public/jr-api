@@ -3,6 +3,7 @@ namespace App\Controller;
 
 use App\DTO\UserRegistrationDTO;
 use App\Entity\User;
+use App\Exception\NotFoundException;
 use App\Service\AuthService;
 use App\Service\RegistrationService;
 use App\Service\RequestContextService;
@@ -22,7 +23,7 @@ class UserController {
         $repo = $this->entityManager->getRepository(User::class);
         $user = $repo->get($id, $this->context->getClient()->get('id'));
         if ( empty($user) ) {
-            throw new \RuntimeException('User not found', 404);
+            throw new NotFoundException('User not found');
         }
         return $user;
     }

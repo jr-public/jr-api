@@ -26,7 +26,7 @@ class RegistrationService {
             foreach ($violations as $violation) {
                 $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
             }
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
+            throw new ValidationException('Validation failed: ' . implode(', ', $errors));
         }
 
         // Continue with existing registration logic

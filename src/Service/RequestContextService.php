@@ -3,6 +3,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\Client;
+use App\Exception\NotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 class RequestContextService {
@@ -44,7 +45,7 @@ class RequestContextService {
 
 	public function getUser(): User {
 		if (!$this->hasUser()) {
-			throw new \Exception("Request context user not found");
+			throw new NotFoundException("Request context user not found");
 		}
 		return $this->user;
 	}
@@ -55,7 +56,7 @@ class RequestContextService {
 				'domain' => $this->request->getHost()
 			]);
 			if (empty($client)) {
-				throw new \Exception("Request context client not found");
+				throw new NotFoundException("Request context client not found");
 			}
 			$this->setClient($client);
 		}
