@@ -9,7 +9,6 @@ use App\Service\RegistrationService;
 use App\Service\RequestContextService;
 use App\Service\UserManagementService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController {
     public function __construct(
@@ -28,69 +27,50 @@ class UserController {
         return $user;
     }
 
-    public function get(int $id): JsonResponse {
+    public function get(int $id): array {
         $targetUser = $this->findUserById($id);
-        return new JsonResponse([
-            'data' => $targetUser->toArray()
-        ], 200);
+        return $targetUser->toArray();
     }
 
-    public function block(int $id, ?string $reason = null): JsonResponse {
+    public function block(int $id, ?string $reason = null): bool {
         $targetUser = $this->findUserById($id);
         $updatedUser = $this->ums->blockUser($targetUser, $reason);
-        return new JsonResponse([
-            'data' => []
-        ], 200);
+        return true;
     }
 
-    public function unblock(int $id, ?string $reason = null): JsonResponse {
+    public function unblock(int $id, ?string $reason = null): bool {
         $targetUser = $this->findUserById($id);
         $updatedUser = $this->ums->unblockUser($targetUser, $reason);
-        return new JsonResponse([
-            'data' => []
-        ], 200);
+        return true;
     }
 
-    public function register(string $username, string $email, string $password): JsonResponse {
+    public function register(string $username, string $email, string $password): array {
         $dto = new UserRegistrationDTO($username, $email, $password);
         $registration = $this->regs->registration($dto);
-        return new JsonResponse([
-            'data' => $registration
-        ], 200);
+        return $registration;
     }
 
-    public function resetPassword(int $id, ?string $password = null): JsonResponse {
+    public function resetPassword(int $id, ?string $password = null): bool {
         $targetUser = $this->findUserById($id);
         $updatedUser = $this->ums->resetPassword($targetUser, $password);
-        return new JsonResponse([
-            'data' => []
-        ], 200);
+        return true;
     }
 
-    public function forgotPassword(string $email): JsonResponse {
+    public function forgotPassword(string $email): bool {
         // SEND EMAIL WITH TOKEN
-        return new JsonResponse([
-            'data' => []
-        ], 200);
+        return true;
     }
 
-    public function activate(string $token): JsonResponse {
+    public function activate(string $token): array {
         $user = $this->regs->activation($token);
-        return new JsonResponse([
-            'data' => [
-                'message' => 'Account activated successfully',
-                'user' => $user->toArray()
-            ]
-        ], 200);
+        return $user->toArray();
     }
-    public function login(string $username, string $password): JsonResponse { 
+    public function login(string $username, string $password): array { 
         $login = $this->auths->login($username, $password);
-        return new JsonResponse([
-            'data' => [
-                'user' => $login['user'],
-                'token' => $login['token']
-            ]
-        ], 200);
+        return [
+            'user' => $login['user'],
+            'token' => $login['token']
+        ];
     }
 
 }
