@@ -71,13 +71,13 @@ class UserManagementService {
         $targetRole = $targetUser->get('role');
         
         if ($actingUser->get('client')->get('id') !== $targetUser->get('client')->get('id')) {
-            throw new BusinessException('Cannot manage users from different clients');
+            throw new BusinessException('BUSINESS_ERROR','Cannot manage users from different clients');
         }
         if (!isset(self::ROLE_HIERARCHY[$actingRole])) {
-            throw new BusinessException('Invalid acting role');
+            throw new BusinessException('BUSINESS_ERROR','Invalid acting role');
         }
         if ($actingUser->get('id') != $targetUser->get('id') && !in_array($targetRole, self::ROLE_HIERARCHY[$actingRole])) {
-            throw new BusinessException(sprintf(
+            throw new BusinessException('BUSINESS_ERROR',sprintf(
                 'User with role %s does not have permission to manage users with role %s',
                 $actingRole,
                 $targetRole
@@ -85,7 +85,7 @@ class UserManagementService {
         }
         // i dont think i need the first part of this conditional
         if ( $actingUser->get('id') == $targetUser->get('id') && !$allow_self ) {
-            throw new BusinessException('Cannot manage self');
+            throw new BusinessException('BUSINESS_ERROR','Cannot manage self');
         }
     }
 }

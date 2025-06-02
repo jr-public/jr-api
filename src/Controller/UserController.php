@@ -23,7 +23,7 @@ class UserController {
         $repo = $this->entityManager->getRepository(User::class);
         $user = $repo->get($id, $this->context->getClient()->get('id'));
         if ( empty($user) ) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('USER_NOT_FOUND');
         }
         return $user;
     }

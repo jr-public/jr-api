@@ -4,9 +4,9 @@ namespace App\Exception;
 class AuthException extends ApiException {
     public function __construct(
         string $message = 'AUTH_ERROR',
-        int $httpStatus = 401,
-        ?string $detail = null
+        ?string $detail = null,
+        int $httpStatus = 401
     ) {
-        parent::__construct($message, $httpStatus, $detail);
+        parent::__construct($message, $detail, $httpStatus);
     }
 }

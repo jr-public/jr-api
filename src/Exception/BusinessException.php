@@ -4,9 +4,9 @@ namespace App\Exception;
 class BusinessException extends ApiException {
     public function __construct(
         string $message = 'BUSINESS_ERROR',
-        int $httpStatus = 422,
-        ?string $detail = null
+        ?string $detail = null,
+        int $httpStatus = 422
     ) {
-        parent::__construct($message, $httpStatus, $detail);
+        parent::__construct($message, $detail, $httpStatus);
     }
 }

@@ -45,7 +45,7 @@ class RequestContextService {
 
 	public function getUser(): User {
 		if (!$this->hasUser()) {
-			throw new NotFoundException("Request context user not found");
+			throw new NotFoundException('BAD_USER', "Request context user not found");
 		}
 		return $this->user;
 	}
@@ -56,7 +56,7 @@ class RequestContextService {
 				'domain' => $this->request->getHost()
 			]);
 			if (empty($client)) {
-				throw new NotFoundException("Request context client not found");
+				throw new NotFoundException('BAD_CLIENT',"Request context client not found");
 			}
 			$this->setClient($client);
 		}

@@ -6,8 +6,8 @@ class ApiException extends \Exception {
     protected int $httpStatus;
     public function __construct(
         string $message = 'API_ERROR',
-        int $httpStatus = 500,
-        ?string $detail = null
+        ?string $detail = null,
+        int $httpStatus = 500
     ) {
         parent::__construct($message);
         $this->httpStatus = $httpStatus;

@@ -29,10 +29,10 @@ class AuthService {
         $userRepo = $this->entityManager->getRepository(User::class);
         $user = $userRepo->findByUsernameAndClient($username, $this->context->getClient()->get('id'));
         if (!$user) {
-            throw new AuthException('Invalid username or password');
+            throw new AuthException('BAD_CREDENTIALS', 'Invalid username');
         }
         elseif (!password_verify($password, $user->get('password'))) {
-            throw new AuthException('Invalid username or password');
+            throw new AuthException('BAD_CREDENTIALS', 'Invalid password');
         }
         return $user;
     }
@@ -41,26 +41,26 @@ class AuthService {
         $jwtService = new JWTService();
         $decoded = $jwtService->decode($jwt);
         if (!isset($decoded->sub)) {
-            throw new AuthException('Invalid token: missing user identifier');
+            throw new AuthException('BAD_TOKEN', 'Invalid token: missing user identifier');
         }
         if (!isset($decoded->iss) || $decoded->iss !== $this->context->getClient()->get('id')) {
-            throw new AuthException('Invalid token: client mismatch');
+            throw new AuthException('BAD_TOKEN','Invalid token: client mismatch');
         }
         if (!isset($decoded->dev) || $decoded->dev !== $this->context->getDevice()) {
-            throw new AuthException('Invalid token: device mismatch');
+            throw new AuthException('BAD_TOKEN','Invalid token: device mismatch');
         }
         if (!isset($decoded->type) || $decoded->type !== 'session') {
-            throw new AuthException('Invalid token: invalid token type');
+            throw new AuthException('BAD_TOKEN','Invalid token: invalid token type');
         }
         $user = $this->entityManager->find(User::class, $decoded->sub);
         if (!$user) {
-            throw new AuthException('Invalid token - user not found');
+            throw new AuthException('BAD_TOKEN','Invalid token - user not found');
         }
         if ($user->get('status') !== 'active') {
-            throw new AuthException('Account is not active');
+            throw new AuthException('NOT_ACTIVE', 'Account is not active');
         }
         if ($user->get('reset_password')) {
-            throw new AuthException('Password reset required');
+            throw new AuthException('RESET_PASSWORD', 'Password reset required');
         }
         return $user;
     }
@@ -69,6 +69,6 @@ class AuthService {
         if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
             return substr($authHeader, 7); // Remove "Bearer " prefix
         }
-        throw new AuthException('Missing or invalid Authorization header');
+        throw new AuthException('BAD_TOKEN', 'Missing or invalid Authorization header');
     }
 }

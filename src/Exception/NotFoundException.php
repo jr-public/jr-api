@@ -4,9 +4,9 @@ namespace App\Exception;
 class NotFoundException extends ApiException {
     public function __construct(
         string $message = 'NOT_FOUND_ERROR',
-        int $httpStatus = 404,
-        ?string $detail = null
+        ?string $detail = null,
+        int $httpStatus = 404
     ) {
-        parent::__construct($message, $httpStatus, $detail);
+        parent::__construct($message, $detail, $httpStatus);
     }
 }
