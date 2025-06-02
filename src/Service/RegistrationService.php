@@ -1,7 +1,6 @@
 <?php
 namespace App\Service;
 
-use App\DTO\UserRegistrationDTO;
 use App\Entity\User;
 use App\Exception\NotFoundException;
 use App\Exception\ValidationException;
@@ -18,22 +17,12 @@ class RegistrationService {
         private readonly ValidatorInterface $validator
     ) {}
 
-    public function registration(UserRegistrationDTO $dto): array {
-        // Validate the DTO first
-        $violations = $this->validator->validate($dto);
-        if (count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
-            }
-            throw new ValidationException('VALIDATION_FAILED', 'Registration validation failed: ' . implode(', ', $errors));
-        }
-
+    public function registration(string $username, string $email, string $password): array {
         // Continue with existing registration logic
         $user = new User();
-        $user->setUsername($dto->username);
-        $user->setEmail($dto->email);
-        $user->setPassword($dto->password);
+        $user->setUsername($username);
+        $user->setEmail($email);
+        $user->setPassword($password);
         $user->setClient($this->context->getClient());
         
         $this->entityManager->persist($user);
