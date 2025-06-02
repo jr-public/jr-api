@@ -1,12 +1,23 @@
 <?php
 namespace App\Exception;
+
 class ApiException extends \Exception {
-    public function __construct(string $message, int $httpStatus = 500) {
+    protected ?string $detail;
+    protected int $httpStatus;
+    public function __construct(
+        string $message = 'API_ERROR',
+        int $httpStatus = 500,
+        ?string $detail = null
+    ) {
         parent::__construct($message);
-        $this->code = $httpStatus;
+        $this->httpStatus = $httpStatus;
+        $this->detail = $detail;
     }
-    
+
+    public function getDetail(): ?string {
+        return $this->detail;
+    }
     public function getHttpStatus(): int {
-        return $this->code;
+        return $this->httpStatus;
     }
 }
