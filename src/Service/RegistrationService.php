@@ -26,7 +26,7 @@ class RegistrationService {
             foreach ($violations as $violation) {
                 $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
             }
-            throw new ValidationException('Validation failed: ' . implode(', ', $errors));
+            throw new ValidationException('VALIDATION_FAILED', 'Registration validation failed: ' . implode(', ', $errors));
         }
 
         // Continue with existing registration logic
@@ -56,12 +56,12 @@ class RegistrationService {
         $decoded    = $jwts->decode($token);
         foreach ($requiredClaims as $key => $expectedValue) {
             if (!isset($decoded->$key) || $decoded->$key !== $expectedValue) {
-                throw new ValidationException("Invalid token: missing or incorrect claim '$key'");
+                throw new ValidationException('BAD_TOKEN', "Invalid activation token: missing or incorrect claim '$key'");
             }
         }
         $user       = $this->entityManager->find(User::class, $decoded->sub);
         if (!$user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('BAD_USER','User not found');
         }
         if ($user->get('status') === 'active') {
             return $user;

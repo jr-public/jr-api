@@ -2,15 +2,15 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-header('Content-Type: application/json');
-
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
 
 use App\Bootstrap\DIContainerBootstrap;
+use App\Exception\ApiException;
 use App\Service\AuthService;
 use App\Service\DispatchService;
 use App\Service\RouterService;
 use App\Service\RequestContextService;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 try {
 	//
@@ -26,23 +26,35 @@ try {
 	}
 	//
 	$instance 	= $container->get($router['_controller']);
-	$response 	= $container->get(DispatchService::class)->dispatch($instance, $router, $request);
-	echo $response;
-} catch (\Throwable $th) {
-    http_response_code(500);
+	$data = $container->get(DispatchService::class)->dispatch($instance, $router, $request);
+	$response = new JsonResponse([
+		'success' => true, 
+		'data' => $data
+	], 200);
+} catch (ApiException $th) {
     $errorResponse = [
-        'error' 	=> true,
-        'type' 		=> 'internal_error',
-        'code' 		=> 'INTERNAL_SERVER_ERROR',
-        'message' 	=> $th->getMessage(),
-        'context' 	=> []
+        'success' 	=> false,
+        'message' 	=> $th->getMessage()
     ];
-    
 	$errorResponse['debug'] = [
-		'file' 	=> $th->getFile(),
-		'line' 	=> $th->getLine(),
-		'trace' => $th->getTraceAsString()
+        'detail' 	=> $th->getDetail(),
+		'file' 		=> $th->getFile(),
+		'line' 		=> $th->getLine(),
+		'trace' 	=> $th->getTraceAsString()
 	];
-    
-    echo json_encode($errorResponse);
+    $response = new JsonResponse($errorResponse, $th->getHttpStatus());
+} catch (\Throwable $th) {
+    $errorResponse = [
+        'success' 	=> false,
+        'message' 	=> 'INTERNAL_SERVER_ERROR'
+    ];
+	$errorResponse['debug'] = [
+		'detail' 	=> $th->getMessage(),
+		'file' 		=> $th->getFile(),
+		'line' 		=> $th->getLine(),
+		'trace' 	=> $th->getTraceAsString()
+	];
+    $response = new JsonResponse($errorResponse, 500);
 }
+
+$response->send();

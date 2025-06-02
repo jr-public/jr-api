@@ -50,10 +50,10 @@ class RouterService
         [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
         
         if (!class_exists($controllerClass)) {
-            throw new NotFoundException("Controller class '$controllerClass' not found", 404);
+            throw new NotFoundException('ROUTING_ERROR', "Controller class '$controllerClass' not found", 404);
         }
         if (!method_exists($controllerClass, $method)) {
-            throw new NotFoundException("Controller method '$method' not found in class '$controllerClass'", 404);
+            throw new NotFoundException('ROUTING_ERROR', "Controller method '$method' not found in class '$controllerClass'", 404);
         }
         
         $routeInfo['_controller'] = $controllerClass;

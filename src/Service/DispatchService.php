@@ -45,6 +45,7 @@ class DispatchService {
                 }
                 // If we reach here, a required parameter is missing and no default was provided.
                 throw new ValidationException(
+                    'MISSING_ARGUMENT',
                     "Missing required argument '{$paramName}' for method '{$reflectionMethod->getName()}' " .
                     "in controller '{".$route['_controller']."}'"
                 );

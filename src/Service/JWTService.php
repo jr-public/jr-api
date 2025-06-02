@@ -32,11 +32,11 @@ class JWTService {
         try {
             return JWT::decode($token, new Key($this->secretKey, $this->algo));
         } catch (ExpiredException $e) {
-            throw new AuthException('Token has expired');
+            throw new AuthException('BAD_TOKEN', 'Token has expired');
         } catch (SignatureInvalidException $e) {
-            throw new AuthException('Invalid token signature');
+            throw new AuthException('BAD_TOKEN', 'Invalid token signature');
         } catch (\Exception $e) {
-            throw new AuthException('Invalid token: ' . $e->getMessage());
+            throw new AuthException('BAD_TOKEN', 'Invalid token: ' . $e->getMessage());
         }
     }
     // public function validateToken(string $token, array $requiredClaims = []): object {
