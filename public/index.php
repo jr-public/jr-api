@@ -8,7 +8,6 @@ if (getenv('APP_ENV') === 'development') {
 }
 
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
-$config = require getenv("PROJECT_ROOT") . 'config/app.php';
 
 use App\Bootstrap\DIContainerBootstrap;
 use App\Service\AuthService;
@@ -22,10 +21,10 @@ try {
 	$response   = $container->get(ResponseService::class);
 	$context    = $container->get(RequestContextService::class);
 	$router     = $container->get(RouterService::class)->match($context->getRequest());
-	// Authenticate user then authorize it. Could (should?) be middleware instead.
+	// Validate token then authorize the user. Could (should?) be middleware instead.
 	if ($router['_group'] != 'guest') {
 		$auths	= $container->get(AuthService::class);
-		$token 	= $auths->extractJwt($this->context->getRequest());
+		$token 	= $auths->extractJwt($context->getRequest());
 		$user 	= $auths->authorize($token);
 		$context->setUser($user);
 	}
