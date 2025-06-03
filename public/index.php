@@ -16,25 +16,25 @@ use App\Service\DispatchService;
 use App\Service\RouterService;
 use App\Service\ResponseService;
 use App\Service\RequestContextService;
-
 try {
 	//
-	$container 	= DIContainerBootstrap::create();
-	$response 	= $container->get(ResponseService::class);
-	$context	= $container->get(RequestContextService::class);
-	$request	= $context->getRequest();
-    $router 	= $container->get(RouterService::class)->match($request);
+	$container  = DIContainerBootstrap::create();
+	$response   = $container->get(ResponseService::class);
+	$context    = $container->get(RequestContextService::class);
+	$router     = $container->get(RouterService::class)->match($context->getRequest());
+	// Authenticate user then authorize it. Could (should?) be middleware instead.
 	if ($router['_group'] != 'guest') {
-		$auth 		= $container->get(AuthService::class);
-		$token 		= $auth->extractJwt($request);
-		$user 		= $auth->authorize($token);
-		$context 	= $context->setUser($user);
+		$auths	= $container->get(AuthService::class);
+		$token 	= $auths->extractJwt($this->context->getRequest());
+		$user 	= $auths->authorize($token);
+		$context->setUser($user);
 	}
-	//
-	$instance 	= $container->get($router['_controller']);
-	$data 		= $container->get(DispatchService::class)->dispatch($instance, $router, $request);
-	$response 	= $response->success($data);
+	// Get controller instance and dispatch
+	$instance   = $container->get($router['_controller']);
+	$data       = $container->get(DispatchService::class)->dispatch($instance, $router, $context->getRequest());
+	$response   = $response->success($data);
 } catch (\Throwable $th) {
 	$response 	= $response->error($th);
 }
+//
 $response->send();

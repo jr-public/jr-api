@@ -45,8 +45,7 @@ class UserController {
     }
 
     public function register(string $username, string $email, string $password): array {
-        $dto = new UserRegistrationDTO($username, $email, $password);
-        $registration = $this->regs->registration($dto);
+        $registration = $this->regs->registration($username, $email, $password);
         return $registration;
     }
 
