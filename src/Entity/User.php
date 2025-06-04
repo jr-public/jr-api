@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping\UniqueConstraint;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[UniqueConstraint(fields:['username', 'client'])]
+#[UniqueConstraint(fields:['email', 'client'])]
 class User {
     #[ORM\Id]
     #[ORM\Column(type: 'integer')]
