@@ -7,6 +7,7 @@ use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Exception\NoConfigurationException;
 
 class RouterService
 {
@@ -46,7 +47,11 @@ class RouterService
 
         $matcher = new UrlMatcher($this->routes, $context);
 
-        $routeInfo = $matcher->match($request->getPathInfo());
+        try {
+            $routeInfo = $matcher->match($request->getPathInfo());
+        } catch (NoConfigurationException $th) {
+            throw new NotFoundException('ROUTING_ERROR', 'No configuration for route', 404);
+        }
         [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
         
         if (!class_exists($controllerClass)) {
