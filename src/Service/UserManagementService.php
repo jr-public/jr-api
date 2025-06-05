@@ -2,21 +2,17 @@
 namespace App\Service;
 
 use App\Entity\User;
-use App\Exception\BusinessException;
+use App\Service\EmailService;
+use App\Service\JWTService;
 use App\Service\RequestContextService;
+use App\Exception\BusinessException;
+use App\Exception\NotFoundException;
+use App\Exception\ValidationException;
 use Doctrine\ORM\EntityManagerInterface;
 
-/**
- * User Management Service (UMS)
- * 
- * This service provides a centralized entry point for managing users within the application.
- * It enforces permission checks based on role hierarchy and ensures proper validation.
- * 
- * IMPORTANT: This service should be used for all user management operations instead of
- * directly modifying User entities.
- */
 class UserManagementService {
     
+
     // Role hierarchy defined as constants for clarity
     private const ROLE_USER = 'user';
     private const ROLE_MODERATOR = 'moderator';
@@ -31,7 +27,9 @@ class UserManagementService {
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager, 
-        private readonly RequestContextService $requestContext
+        private readonly EmailService $emails,
+        private readonly JWTService $jwts, 
+        private readonly RequestContextService $context
     ) {}
 
     public function blockUser(User $targetUser, ?string $reason = null): User {
@@ -66,7 +64,7 @@ class UserManagementService {
         return $targetUser;
     }
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {
-        $actingUser = $this->requestContext->getUser();
+        $actingUser = $this->context->getUser();
         $actingRole = $actingUser->get('role');
         $targetRole = $targetUser->get('role');
         
@@ -87,5 +85,69 @@ class UserManagementService {
         if ( $actingUser->get('id') == $targetUser->get('id') && !$allow_self ) {
             throw new BusinessException('BUSINESS_ERROR','Cannot manage self');
         }
+    }
+
+
+
+
+
+
+
+
+
+
+    
+    // GUEST
+    
+    public function registration(string $username, string $email, string $password): array {
+        $this->entityManager->getConnection()->beginTransaction();
+        try {
+            $user = new User();
+            $user->setUsername($username);
+            $user->setEmail($email);
+            $user->setPassword($password);
+            $user->setClient($this->context->getClient());
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+            
+            $token = $this->jwts->create([
+                'iss'   => $this->context->getClient()->get('id'),
+                'sub'   => $user->get('id'),
+                'type'  => 'activation'
+            ]);
+
+            $this->emails->sendActivationEmail(
+                $user->get('email'),
+                $user->get('username'),
+                $token
+            );
+            $this->entityManager->getConnection()->commit(); 
+            return ['user' => $user->toArray()];
+        } catch (\Throwable $th) {
+            $this->entityManager->getConnection()->rollBack();
+            throw $th;
+        }
+    }
+    public function activation(string $token): User {
+        $requiredClaims = [
+            'iss'   => $this->context->getClient()->get('id'),
+            'type'  => 'activation'
+        ];
+        $decoded    = $this->jwts->decode($token);
+        foreach ($requiredClaims as $key => $expectedValue) {
+            if (!isset($decoded->$key) || $decoded->$key !== $expectedValue) {
+                throw new ValidationException('BAD_TOKEN', "Invalid activation token: missing or incorrect claim '$key'");
+            }
+        }
+        $user       = $this->entityManager->find(User::class, (int)$decoded->sub);
+        if (!$user) {
+            throw new NotFoundException('BAD_USER','User not found');
+        }
+        if ($user->get('status') === 'active') {
+            return $user;
+        }
+        $user->activate();
+        $this->entityManager->flush();
+        return $user;
     }
 }
