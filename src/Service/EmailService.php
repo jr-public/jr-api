@@ -59,7 +59,7 @@ class EmailService {
 
 
     public function sendActivationEmail(string $email, string $username, string $token): bool {
-        $activationUrl = "http://localhost/guest/activate?token=" . urlencode($token);
+        $activationUrl = "http://localhost/activation.php?token=" . urlencode($token);
         
         $subject = "Activate your account";
         $body = "
@@ -73,7 +73,7 @@ class EmailService {
     }
 
     public function sendPasswordResetEmail(string $email, string $username, string $token): bool {
-        $resetUrl = "http://localhost/guest/reset-password?token=" . urlencode($token);
+        $resetUrl = "http://localhost/password_reset.php?token=" . urlencode($token);
         
         $subject = "Reset your password";
         $body = "

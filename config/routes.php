@@ -13,14 +13,19 @@ return [
             'methods' => ['POST'],
         ],
         'user_password_forgot' => [
-            'path' => '/guest/forgot-password',
+            'path' => '/guest/password-forgot',
             'controller' => 'App\Controller\UserController::passwordForgot',
+            'methods' => ['POST'],
+        ],
+        'user_password_reset' => [
+            'path' => '/guest/password-reset',
+            'controller' => 'App\Controller\UserController::passwordReset',
             'methods' => ['POST'],
         ],
         'user_activate' => [
             'path' => '/guest/activate',
             'controller' => 'App\Controller\UserController::activate',
-            'methods' => ['GET'],
+            'methods' => ['POST'],
         ],
     ],
     'user' => [
@@ -39,12 +44,6 @@ return [
         'user_unblock' => [
             'path' => '/users/{id}/unblock',
             'controller' => 'App\Controller\UserController::unblock',
-            'methods' => ['POST'],
-            'requirements' => ['id' => '\d+']
-        ],
-        'user_reset_password' => [
-            'path' => '/users/{id}/reset-password',
-            'controller' => 'App\Controller\UserController::resetPassword',
             'methods' => ['POST'],
             'requirements' => ['id' => '\d+']
         ],

@@ -41,13 +41,6 @@ class UserController {
         return true;
     }
 
-
-    public function resetPassword(int $id, ?string $password = null): bool {
-        $targetUser = $this->findUserById($id);
-        $updatedUser = $this->ums->resetPassword($targetUser, $password);
-        return true;
-    }
-
     public function login(string $username, string $password): array { 
         $login = $this->auths->login($username, $password);
         return [
@@ -63,9 +56,13 @@ class UserController {
         $user = $this->ums->activation($token);
         return $user->toArray();
     }
-    public function forgotPassword(string $email): bool {
-        // SEND EMAIL WITH TOKEN
-        return true;
+    public function passwordForgot(string $email): bool {
+        $sent = $this->ums->passwordForgot($email);
+        return $sent;
+    }
+    public function passwordReset(string $token, string $new_pass): bool {
+        $reset = $this->ums->passwordReset($token, $new_pass);
+        return $reset;
     }
 
 }

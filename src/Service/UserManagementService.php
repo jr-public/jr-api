@@ -45,24 +45,7 @@ class UserManagementService {
         $this->entityManager->flush();
         return $targetUser;
     }
-    public function resetPassword(User $targetUser, ?string $newPassword = null ): User {
-        $this->verifyPermissionToManage($targetUser, true);
-        if (empty($newPassword)) {
-            $targetUser->resetPassword();
-            $this->entityManager->flush();
-            // Generate reset token
-            // $jwtService = new JWTService();
-            // $resetToken = $jwtService->createToken([
-            //     'sub' => $targetUser->get('id'),
-            //     'type' => 'password_reset'
-            // ], 3600); // 1 hour expiry
-        }
-        else {
-            $targetUser->setPassword($newPassword);
-            $this->entityManager->flush();
-        }
-        return $targetUser;
-    }
+
     private function verifyPermissionToManage(User $targetUser, bool $allow_self = false): void {
         $actingUser = $this->context->getUser();
         $actingRole = $actingUser->get('role');
@@ -149,5 +132,45 @@ class UserManagementService {
         $user->activate();
         $this->entityManager->flush();
         return $user;
+    }
+    public function passwordForgot(string $email): bool {
+        $client = $this->context->getClient();
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email, 'client' => $client]);
+        if (!$user) {
+            throw new NotFoundException('BAD_USER','User not found');
+        }
+        
+        $token = $this->jwts->create([
+            'iss'   => $client->get('id'),
+            'sub'   => $user->get('id'),
+            'type'  => 'password_reset'
+        ], 3600);
+
+        $this->emails->sendPasswordResetEmail(
+            $user->get('email'),
+            $user->get('username'),
+            $token
+        );
+        return true;
+
+    }
+    public function passwordReset(string $token, string $newPassword ): bool {
+        $requiredClaims = [
+            'iss'   => $this->context->getClient()->get('id'),
+            'type'  => 'password_reset'
+        ];
+        $decoded    = $this->jwts->decode($token);
+        foreach ($requiredClaims as $key => $expectedValue) {
+            if (!isset($decoded->$key) || $decoded->$key !== $expectedValue) {
+                throw new ValidationException('BAD_TOKEN', "Invalid password reset token: missing or incorrect claim '$key'");
+            }
+        }
+        $targetUser       = $this->entityManager->find(User::class, (int)$decoded->sub);
+        if (!$targetUser) {
+            throw new NotFoundException('BAD_USER','User not found');
+        }
+        $targetUser->setPassword($newPassword);
+        $this->entityManager->flush();
+        return true;
     }
 }

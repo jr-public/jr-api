@@ -16,8 +16,7 @@ class AuthService {
 
     public function login( string $username, string $password ): array {
         $user   = $this->authenticate($username, $password);
-        $jwts   = new JWTService();
-        $token  = $jwts->create([
+        $token  = $this->jwts->create([
             'sub' => $user->get('id'),
             'iss' => $this->context->getClient()->get('id'),
             'dev' => $this->context->getDevice(),
@@ -38,8 +37,7 @@ class AuthService {
     }
 
     public function authorize(string $jwt): User {
-        $jwtService = new JWTService();
-        $decoded = $jwtService->decode($jwt);
+        $decoded = $this->jwts->decode($jwt);
         if (!isset($decoded->sub)) {
             throw new AuthException('BAD_TOKEN', 'Invalid token: missing user identifier');
         }
