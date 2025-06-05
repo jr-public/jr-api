@@ -39,22 +39,4 @@ class JWTService {
             throw new AuthException('BAD_TOKEN', 'Invalid token: ' . $e->getMessage());
         }
     }
-    // public function validateToken(string $token, array $requiredClaims = []): object {
-    //     $decoded = JWT::decode($token, new Key($this->secretKey, $this->algo));
-    //     foreach ($requiredClaims as $key => $expected) {
-    //         if (!isset($decoded->$key) || $decoded->$key !== $expected) {
-    //             throw new \Exception('Invalid token');
-    //         }
-    //     }
-    //     return $decoded;
-    // }
-    // public function refreshToken(string $token, ?int $ttl = null): string {
-    //     $decoded = $this->validateToken($token);
-    //     return $this->createToken([
-    //         'iss' => $decoded->iss,
-    //         'sub' => $decoded->sub,
-    //         'dev' => $decoded->dev,
-    //         'type' => $decoded->type
-    //     ], $ttl);
-    // }
 }

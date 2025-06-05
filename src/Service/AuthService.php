@@ -13,16 +13,23 @@ class AuthService {
         private readonly JWTService $jwts,
         private readonly RequestContextService $context
     ) {}
-
-    public function login( string $username, string $password ): array {
-        $user   = $this->authenticate($username, $password);
+    public function createToken(User $user, string $type = 'session'): string {
         $token  = $this->jwts->create([
             'sub' => $user->get('id'),
             'iss' => $this->context->getClient()->get('id'),
             'dev' => $this->context->getDevice(),
-            'type' => 'session'
+            'type' => $type
         ]);
-        return ['token' => $token, 'user' => $user->toArray()];
+        return $token;
+    }
+    public function renewToken(): string {
+        $user = $this->context->getUser();
+        $token = $this->createToken($user);
+        return $token;
+    }
+    public function login( string $username, string $password ): array {
+        $user   = $this->authenticate($username, $password);
+        return ['token' => $this->createToken($user), 'user' => $user->toArray()];
     }
     public function authenticate(string $username, string $password): User {
         $userRepo = $this->entityManager->getRepository(User::class);
@@ -35,7 +42,6 @@ class AuthService {
         }
         return $user;
     }
-
     public function authorize(string $jwt): User {
         $decoded = $this->jwts->decode($jwt);
         if (!isset($decoded->sub)) {

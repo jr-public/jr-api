@@ -34,11 +34,16 @@ class UserController {
         $updatedUser = $this->ums->blockUser($targetUser, $reason);
         return true;
     }
-
     public function unblock(int $id, ?string $reason = null): bool {
         $targetUser = $this->findUserById($id);
         $updatedUser = $this->ums->unblockUser($targetUser, $reason);
         return true;
+    }
+    public function renewToken(): array {
+        $token = $this->auths->renewToken();
+        return [
+            'token' => $token
+        ];
     }
 
     public function login(string $username, string $password): array { 

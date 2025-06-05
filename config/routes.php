@@ -47,5 +47,10 @@ return [
             'methods' => ['POST'],
             'requirements' => ['id' => '\d+']
         ],
+        'user_renew_token' => [
+            'path' => '/users/renew',
+            'controller' => 'App\Controller\UserController::renewToken',
+            'methods' => ['POST'],
+        ],
     ]
 ];
