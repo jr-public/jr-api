@@ -1,11 +1,9 @@
 <?php
 namespace App\Controller;
 
-use App\DTO\UserRegistrationDTO;
 use App\Entity\User;
 use App\Exception\NotFoundException;
 use App\Service\AuthService;
-use App\Service\RegistrationService;
 use App\Service\RequestContextService;
 use App\Service\UserManagementService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,7 +13,6 @@ class UserController {
         private readonly EntityManagerInterface $entityManager,
         private readonly RequestContextService $context,
         private readonly UserManagementService $ums,
-        private readonly RegistrationService $regs,
         private readonly AuthService $auths
     ) {}
     private function findUserById(int $id): User {
@@ -44,10 +41,6 @@ class UserController {
         return true;
     }
 
-    public function register(string $username, string $email, string $password): array {
-        $registration = $this->regs->registration($username, $email, $password);
-        return $registration;
-    }
 
     public function resetPassword(int $id, ?string $password = null): bool {
         $targetUser = $this->findUserById($id);
@@ -55,21 +48,24 @@ class UserController {
         return true;
     }
 
-    public function forgotPassword(string $email): bool {
-        // SEND EMAIL WITH TOKEN
-        return true;
-    }
-
-    public function activate(string $token): array {
-        $user = $this->regs->activation($token);
-        return $user->toArray();
-    }
     public function login(string $username, string $password): array { 
         $login = $this->auths->login($username, $password);
         return [
             'user' => $login['user'],
             'token' => $login['token']
         ];
+    }
+    public function register(string $username, string $email, string $password): array {
+        $registration = $this->ums->registration($username, $email, $password);
+        return $registration;
+    }
+    public function activate(string $token): array {
+        $user = $this->ums->activation($token);
+        return $user->toArray();
+    }
+    public function forgotPassword(string $email): bool {
+        // SEND EMAIL WITH TOKEN
+        return true;
     }
 
 }
