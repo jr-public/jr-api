@@ -7,7 +7,9 @@ use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\NoConfigurationException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 class RouterService
 {
@@ -46,14 +48,20 @@ class RouterService
         $context->fromRequest($request);
 
         $matcher = new UrlMatcher($this->routes, $context);
-
+        
         try {
             $routeInfo = $matcher->match($request->getPathInfo());
         } catch (NoConfigurationException $th) {
-            throw new NotFoundException('ROUTING_ERROR', 'No configuration for route', 404);
+            throw new NotFoundException('ROUTING_ERROR', 'No configuration found', 404);
+        } catch (ResourceNotFoundException $th) {
+            throw new NotFoundException('ROUTING_ERROR', 'Resource not found', 404);
+        } catch (MethodNotAllowedException $th) {
+            throw new NotFoundException('ROUTING_ERROR', 'Method not allowed', 404);
+        } catch (\Throwable $th) {
+            throw new NotFoundException('ROUTING_ERROR', 'Unknown error', 404);
         }
-        [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
         
+        [$controllerClass, $method] = explode('::', $routeInfo['_controller']);
         if (!class_exists($controllerClass)) {
             throw new NotFoundException('ROUTING_ERROR', "Controller class '$controllerClass' not found", 404);
         }

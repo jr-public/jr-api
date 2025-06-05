@@ -32,6 +32,7 @@ class ResponseService {
         
         if ($this->debugMode) {
             $response['debug'] = [
+                'class' => get_class($exception),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
                 'trace' => $exception->getTraceAsString(),
