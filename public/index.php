@@ -7,6 +7,25 @@ if (getenv('APP_ENV') === 'development') {
     error_reporting(0);
 }
 
+// Check if origin is in the allowed list
+$origin		= $_SERVER['HTTP_ORIGIN'] ?? '';
+$allowed	= [
+    'https://localhost',
+    'http://localhost',
+];
+if (in_array($origin, $allowed)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header("Access-Control-Allow-Credentials: true");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+}
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header('Content-Type: application/json');
+    http_response_code(200);
+    exit;
+}
+
+
 require_once(getenv("PROJECT_ROOT") . 'vendor/autoload.php');
 
 use App\Bootstrap\DIContainerBootstrap;
